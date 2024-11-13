@@ -1,0 +1,5 @@
+{
+  // settings.json
+  "typescript.preferences.autoImportFileExcludePatterns": ["@radix-ui/*"],
+  "javascript.preferences.autoImportFileExcludePatterns": ["@radix-ui/*"]
+}
