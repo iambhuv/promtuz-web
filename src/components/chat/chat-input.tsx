@@ -92,6 +92,7 @@ export default function ChatInput({
         onChange={handleChange}
       >
         <Editable
+          id='chat-input'
           className={cn("outline-none max-h-[200px] overflow-y-auto message-input", className)}
           placeholder={placeholder}
           onKeyDown={handleKeyDown}

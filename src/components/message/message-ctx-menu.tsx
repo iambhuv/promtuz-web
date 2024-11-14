@@ -1,15 +1,14 @@
-import React, { memo } from 'react'
+import React, {  memo } from 'react'
 
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuGroup,
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger
 } from '@/components/ui/context-menu';
-import { Copy, Edit3, Flag, Forward, LucideIcon, MessageSquareDot, Reply, SmilePlus, Trash, UserRound } from 'lucide-react';
+import { Copy, Edit3, LucideIcon, Reply, Trash } from 'lucide-react';
 import type { Message } from '@/store/store';
 import { useStore } from '@/store';
 import { useToast } from '@/hooks/useToast';

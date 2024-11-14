@@ -1,7 +1,6 @@
-import { useStore } from '@/store';
 import { Channel } from '@/store/store';
 import { Paperclip, SendHorizonal } from 'lucide-react';
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { createEditor } from 'slate';
 import { withHistory } from 'slate-history';
 import { withReact } from 'slate-react';
@@ -11,7 +10,7 @@ import ErrorBoundary from '../error-boundary';
 import useTypingStatus from '@/hooks/useTypingStatus';
 import { PasteEvent } from '@/types';
 import useAttachments from '@/hooks/attachments/useAttachments';
-import { InputReplyBubble, MessageContentReply, MessageTextContent } from './message-bubble';
+import { InputReplyBubble } from './message-bubble';
 import { useChatStore } from '@/store/chat';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -48,6 +47,14 @@ export const MessageInput = memo(({
   const handlePaste = async (pasteEvent: PasteEvent) => {
     handleFilePaste(pasteEvent);
   }
+
+  useEffect(() => {
+    const chatInput = document.getElementById('chat-input');
+
+    if (chatInput) {
+      chatInput.focus()
+    }
+  }, [inputState])
 
   return (
     <div className="px-4">
