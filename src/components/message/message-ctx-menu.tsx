@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 
 import {
   ContextMenu,
@@ -12,8 +12,9 @@ import {
 import { Copy, Edit3, Flag, Forward, LucideIcon, MessageSquareDot, Reply, SmilePlus, Trash, UserRound } from 'lucide-react';
 import type { Message } from '@/store/store';
 import { useStore } from '@/store';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/useToast';
 import { motion } from "framer-motion"
+import { useChatStore } from '@/store/chat';
 
 const MessageContextMenuItem = motion.create(ContextMenuItem);
 
@@ -21,11 +22,16 @@ type MenuList = ({ label: string, icon?: LucideIcon, seperator?: false, onClick?
 
 const MessageContextMenu = ({ children, message }: React.PropsWithChildren<{ message: Message }>) => {
   const deleteMessage = useStore(({ deleteMessage }) => deleteMessage);
+  const chatState = useChatStore();
   const { toast } = useToast()
 
   const MESSAGE_BUBBLE_CONTEXT: MenuList = [
     { label: "Copy", icon: Copy },
-    { label: "Reply", icon: Reply },
+    {
+      label: "Reply", icon: Reply, onClick() {
+        chatState.setInputState(message.channel_id, { type: "REPLYING", refMessage: message.id })
+      },
+    },
     { label: "Edit", icon: Edit3 },
     {
       label: "Delete", icon: Trash, onClick() {
@@ -68,4 +74,4 @@ const MessageContextMenu = ({ children, message }: React.PropsWithChildren<{ mes
   )
 }
 
-export default MessageContextMenu
+export default memo(MessageContextMenu)

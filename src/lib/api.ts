@@ -1,4 +1,6 @@
-export const handleRequest = async <D>(method: string, path: string, body?: object, headers: object = {}): Promise<{ err: null; data: D; } | { data: null; err: any; }> => {
+export type APIResponse<D> = { err: null; data: D; } | { data: null; err: any; }
+
+export const handleRequest = async <D>(method: string, path: string, body?: object, headers: object = {}): Promise<APIResponse<D>> => {
   try {
     const res = await fetch(new URL(path, process.env.API_ENDPOINT), {
       method,

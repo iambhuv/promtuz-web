@@ -6,6 +6,7 @@ import { Editable, ReactEditor, Slate } from 'slate-react';
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
+  onPaste: (pasteEvent: React.ClipboardEvent<HTMLDivElement>) => void;
   onSubmit?: () => void;
   placeholder?: string;
   className?: string;
@@ -51,6 +52,7 @@ export default function ChatInput({
   value,
   onChange,
   onSubmit,
+  onPaste,
   editor,
   placeholder = 'Type a message...',
   className = '',
@@ -93,6 +95,7 @@ export default function ChatInput({
           className={cn("outline-none max-h-[200px] overflow-y-auto message-input", className)}
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
+          onPaste={onPaste}
         />
       </Slate>
     </div>

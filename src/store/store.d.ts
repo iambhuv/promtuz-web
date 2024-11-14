@@ -1,3 +1,4 @@
+import { APIResponse } from "@/lib/api";
 import { AttachmentType } from "./enums";
 
 export type Attachment = {
@@ -98,6 +99,7 @@ export type StoreActions = {
   emit(event: RealtimeEvent, data: Record<any, unknown>): void
   deleteMessage(channel_id: string, message_id: string): Promise<void>
   ackMessage(channel_id: string, message_id: string): Promise<void>
+  getMessage(channel_id: string, message_id: string): Promise<APIResponse<Message>>
 }
 
 export type DataStore = StoreState & StoreActions;

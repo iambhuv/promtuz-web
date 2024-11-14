@@ -1,11 +1,15 @@
-import { handleRequest } from "@/lib/api";
+import { APIResponse, handleRequest } from "@/lib/api";
 import { useStore } from "@/store";
+import { useChatStore } from "@/store/chat";
 import { Message } from "@/store/store";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const useMessageHandlers = (channelId: string) => {
   const loadMessages = useStore(store => store.loadMessages);
-  
+
+  const chatState = useChatStore();
+  const inputState = chatState.inputs[channelId];
+
   const [state, setState] = useState({
     loading: false,
     loadingMoreMessages: false,
@@ -45,7 +49,16 @@ const useMessageHandlers = (channelId: string) => {
     if (state.sendingMessage) return false;
     setState(prev => ({ ...prev, sendingMessage: true }));
 
-    const response = await handleRequest<Message>('POST', `/chats/${channelId}/messages`, { content: text });
+    let response: APIResponse<Message>;
+    const handleMessageRequest = (handleRequest<Message>).bind(this, "POST", `/chats/${channelId}/messages`)
+
+    if (inputState?.type == 'REPLYING') {
+      response = await handleMessageRequest({ content: text, reply_to: inputState.refMessage });
+      chatState.removeInputState(channelId)
+    } else {
+      response = await handleMessageRequest({ content: text });
+    }
+
     setState(prev => ({ ...prev, sendingMessage: false }));
 
     return !response.err;

@@ -1,7 +1,7 @@
 // All Receivable Event Types Here
 
 import { Channel, Message, MeUser, Relationship, User } from "@/store/store";
-import { DateString, MakeRequired } from "./generics";
+import { DateString, MakeRequired } from ".";
 
 interface RealtimeReceivableEvents {
   "ME": { me: MeUser, channels: { [channel_id: string]: Channel }, relationships: Relationship[], users: User[] }

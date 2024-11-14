@@ -58,7 +58,7 @@ export const createStore = (initProps: Partial<DataStore>) => {
       return get().me!
     },
 
-    async initConnection(tries: number = 1) { 
+    async initConnection(tries: number = 1) {
       if (get().ws && (get().ws?.readyState === 1)) return;
 
       set({ connectionStatus: tries > 1 ? "RETRYING" : "CONNECTING" });
@@ -207,10 +207,9 @@ export const createStore = (initProps: Partial<DataStore>) => {
       await handleRequest<null>(`POST`, `/chats/${channel_id}/messages/${message_id}/ack`);
     },
 
-    // getLastMessage(channel_id: string) {
-    //   const messages_obj = get().messages?.[channel_id];
-    //   messages_obj[getFirstKey(messages_obj)]
-    // } 
+    async getMessage(channel_id, message_id) {
+      return await handleRequest<Message>(`GET`, `/chats/${channel_id}/messages/${message_id}`)
+    }
   })));
 
   return store

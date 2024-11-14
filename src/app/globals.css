@@ -79,11 +79,10 @@
     --sidebar-border: var(--hue) 19.5% 22%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-
-    --message-bubble-sent: hsl(var(--hue) 45% 50% / .8);
-    --message-bubble-sent-reply: hsl(var(--hue) 45% 35%);
-    --message-bubble-recv: hsl(var(--hue) 18% 19.5% / .8);
-    --message-bubble-recv-reply: hsl(var(--hue) 18% 13.5%);
+    --message-bubble-sent: hsl(var(--hue) 45% 50% / 0.8);
+    --message-bubble-sent-reply: hsl(var(--hue) 43% 52% / 0.95);
+    --message-bubble-recv: hsl(var(--hue) 18% 19.5% / 0.8);
+    --message-bubble-recv-reply: hsl(var(--hue) 16% 25%);
   }
 
   svg.logo {

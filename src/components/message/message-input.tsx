@@ -1,15 +1,21 @@
 import { useStore } from '@/store';
 import { Channel } from '@/store/store';
 import { Paperclip, SendHorizonal } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import { createEditor } from 'slate';
 import { withHistory } from 'slate-history';
 import { withReact } from 'slate-react';
 import ChatInput, { clearEditor, serializeToString } from '../chat/chat-input';
 import { Button } from '../ui/button';
 import ErrorBoundary from '../error-boundary';
+import useTypingStatus from '@/hooks/useTypingStatus';
+import { PasteEvent } from '@/types';
+import useAttachments from '@/hooks/attachments/useAttachments';
+import { InputReplyBubble, MessageContentReply, MessageTextContent } from './message-bubble';
+import { useChatStore } from '@/store/chat';
+import { AnimatePresence, motion } from 'framer-motion';
 
-export const MessageInput = ({
+export const MessageInput = memo(({
   onSubmit,
   channel
 }: {
@@ -18,39 +24,15 @@ export const MessageInput = ({
 }) => {
   const [message, setMessage] = useState('');
   const editor = useMemo(() => withReact(withHistory(createEditor())), []);
-  const ws_emit = useStore(({ emit }) => emit);
-  const typingRef = useRef<any>(null)
+  const { handleTypingStatus } = useTypingStatus(channel.id);
+  const { handleFilePaste } = useAttachments();
 
+  const inputState = useChatStore().inputs[channel.id];
 
   const handleChange = (value: string) => {
-    if (value == message) return setMessage(value);
-
     setMessage(value);
 
-    if (!value.trim()) {
-      if (typingRef.current) {
-        clearTimeout(typingRef.current);
-        typingRef.current = null;
-        ws_emit("CHAT_STATUS", { channel_id: channel.id, status: "IDLE" })
-      }
-      return;
-    }
-
-    // Clear any existing timeout before setting a new one
-    if (typingRef.current) {
-      clearTimeout(typingRef.current);
-    }
-
-    if (typingRef.current == null) {
-      ws_emit("CHAT_STATUS", { channel_id: channel.id, status: "TYPING" });
-    }
-
-    // Set a new timeout
-    typingRef.current = setTimeout(() => {
-      ws_emit("CHAT_STATUS", { channel_id: channel.id, status: "IDLE" });
-      clearTimeout(typingRef.current);
-      typingRef.current = null;
-    }, 7000);
+    if (value != message) handleTypingStatus(value);
   };
 
 
@@ -63,30 +45,45 @@ export const MessageInput = ({
     }
   };
 
+  const handlePaste = async (pasteEvent: PasteEvent) => {
+    handleFilePaste(pasteEvent);
+  }
+
   return (
     <div className="px-4">
-      <div className="w-full h-fit bg-border rounded-xl p-1 flex items-start justify-between sticky bottom-0 message-input-wrapper">
-        <div className="max-h-96 w-full overflow-y-auto break-words p-2">
-          <ErrorBoundary>
-            <ChatInput
-              value={message}
-              editor={editor}
-              onChange={handleChange}
-              onSubmit={handleSubmit}
-              className="max-h-72 overflow-y-auto sidebar-inset-scrollarea"
-              placeholder="Type your message..."
-            />
-          </ErrorBoundary>
-        </div>
-        <div className="p-1 flex gap-1.5">
-          <Button variant={'ghost'} size={'icon'} className='size-8'>
-            <Paperclip />
-          </Button>
-          <Button variant={'default'} size={'icon'} className='size-8' onClick={handleSubmit}>
-            <SendHorizonal />
-          </Button>
-        </div>
-      </div>
-    </div>
+      <AnimatePresence >
+        <motion.div className="w-full h-fit bg-border rounded-xl p-1 flex flex-col sticky bottom-0 message-input-wrapper">
+          {
+            inputState?.type == 'REPLYING' ?
+              <InputReplyBubble channel_id={channel.id} message_id={inputState.refMessage} />
+              : null
+          }
+          {/* <InputReplyBubble /> */}
+          <div className="flex items-start justify-between flex-1 relative z-20 bg-border">
+            <div className="max-h-96 w-full overflow-y-auto break-words p-2">
+              <ErrorBoundary>
+                <ChatInput
+                  value={message}
+                  editor={editor}
+                  onChange={handleChange}
+                  onSubmit={handleSubmit}
+                  onPaste={handlePaste}
+                  className="max-h-72 overflow-y-auto sidebar-inset-scrollarea"
+                  placeholder="Type your message..."
+                />
+              </ErrorBoundary>
+            </div>
+            <div className="p-1 flex gap-1.5">
+              <Button variant={'ghost'} size={'icon'} className='size-8'>
+                <Paperclip />
+              </Button>
+              <Button variant={'default'} size={'icon'} className='size-8' onClick={handleSubmit}>
+                <SendHorizonal />
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div >
   )
-}
+})

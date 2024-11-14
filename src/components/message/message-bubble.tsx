@@ -1,12 +1,20 @@
 import { cn, parseMessageDate, shouldMessageMemo, shouldMessageShowTime } from "@/lib/utils";
 import { useStore } from "@/store";
-import { Message } from "@/store/store";
-import { forwardRef, Fragment, memo } from "react";
+import { Message, User } from "@/store/store";
+import { forwardRef, Fragment, memo, use } from "react";
 import sanitize from "sanitize-html";
 import MessageContextMenu from "./message-ctx-menu";
 import { motion } from "framer-motion"
+import { useAPI } from "@/hooks/useAPI";
+import { X } from "lucide-react";
+import { Button } from "../ui/button";
+import { useChatStore } from "@/store/chat";
 
 type MessageBubbleProps = { message: Message, nextMessage?: Message, previousMessage?: Message };
+
+const MessageAuthor = memo(({ author }: { author?: User }) => {
+  return author?.display_name ? author?.display_name : author?.username ? `@${author?.username}` : <i>Unknown Author</i>
+})
 
 const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ message, nextMessage, previousMessage }, loadMoreRef) => {
   const me = useStore(({ me }) => me)
@@ -14,11 +22,8 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
 
   if (!author) return <div className='italic'>Message without Author</div>;
 
-  const sent = me.id == author.id;
-
+  const sent = me.id == author.id
   const shouldShowTime = shouldMessageShowTime({ message, nextMessage });
-
-  const is_reply = message.reply_to !== null;
 
   return <MessageContextMenu message={message}>
     <motion.div
@@ -32,14 +37,11 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
       ref={loadMoreRef}
     >
       <MessageContent message={message} sent={sent} />
-      {
-        // is_reply ? <MessageContentReply message={message} sent={sent} /> : <MessageContent message={message} sent={sent} />
-      }
     </motion.div>
   </MessageContextMenu>
 }), shouldMessageMemo)
 
-const MessageContentReply = ({ message, sent }: { message: Message, sent: boolean }) => {
+export const MessageContentReply = ({ message, sent }: { message: Message, sent: boolean }) => {
   const reply = message.reply_to;
   const reply_user = useStore(({ users }) => users.get(reply.author_id));
 
@@ -54,10 +56,8 @@ const MessageContentReply = ({ message, sent }: { message: Message, sent: boolea
 
   return (
     <div className={cn("py-[0.2rem] px-2 cursor-pointer rounded-md", sent ? "bg-[--message-bubble-sent-reply]" : 'bg-[--message-bubble-recv-reply]')} onClick={scrollToMessage}>
-      <span className="text-[.65rem] font-medium block mt-1 text-foreground">{reply_user?.display_name || "Unknown Author"}</span>
-      <p dangerouslySetInnerHTML={{
-        __html: sanitize(reply.content.replace(/\n/g, '<br/>'))
-      }} className='text-[16px] mb-1 text-ellipsis overflow-hidden whitespace-nowrap'></p>
+      <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={reply_user} /></span>
+      <MessageTextContent content={reply.content} className="block mb-1 text-ellipsis overflow-hidden whitespace-nowrap" />
     </div>
   )
 }
@@ -70,10 +70,7 @@ const MessageContent = ({ message, sent, className }: { message: Message, sent: 
         {reply && <MessageContentReply message={message} sent={sent} />}
 
         <div className={cn("py-[0.2rem]", reply ? "px-1.5" : "px-2")}>
-          <p dangerouslySetInnerHTML={{
-            __html: sanitize(message.content.replace(/\n/g, '<br/>'))
-          }} className='text-[16px] inline'>
-          </p>
+          <MessageTextContent content={message.content} />
 
           <span className="inline-flex pointer-events-none align-middle select-none float-right invisible relative pl-[4.5px]">
             <span className={cn('text-[12px]/[1] opacity-75 select-none text-nowrap')}>{parseMessageDate(message.created_at)}</span>
@@ -83,7 +80,47 @@ const MessageContent = ({ message, sent, className }: { message: Message, sent: 
       </div>
     </>
   )
+};
+
+export const MessageTextContent = ({ content, className }: { content: string, className?: string }) => {
+  return <p dangerouslySetInnerHTML={{ __html: sanitize(content.replace(/\n/g, '<br/>')) }} className={cn('text-[16px] inline', className)}></p>
 }
 
+
+export const InputReplyBubble = memo(({ channel_id, message_id }: { channel_id: string, message_id: string }) => {
+  let message_cache = useStore(({ messages }) => messages[channel_id][message_id]);
+
+  let { data: message, loading } = message_cache ? { data: message_cache, loading: false } : useAPI<Message>('GET', `/chats/${channel_id}/messages/${message_id}`);
+
+  const reply_user = useStore(({ users }) => users.get(message ? message.author_id : ""));
+  const removeInputState = useChatStore().removeInputState
+
+  // if (loading || !message) return (
+  // <motion.div layout className="w-full h-fit px-2.5 pt-2 pb-1.5 rounded-lg bg-[--message-bubble-recv-reply]">
+  //   <p className='text-[.65rem] italic'>{loading ? 'Loading Message...' : 'Invalid Message'}</p>
+  // </motion.div>
+  // );
+
+  const cancelReply = () => {
+    removeInputState(channel_id)
+  }
+
+  return <motion.div className="w-full h-fit px-2.5 pt-2 pb-1.5 rounded-lg bg-[--message-bubble-recv-reply] flex items-center relative z-10">
+    {loading || !message ?
+      <p className='text-[.65rem] italic'>{loading ? 'Loading Message...' : 'Invalid Message'}</p>
+      : <>
+        <div className="flex flex-col flex-1">
+          <p className='text-[.55rem]'>Replying to <MessageAuthor author={reply_user} /></p>
+          <MessageTextContent content={message.content.slice(0, 128)} className="block max-h-[1lh] overflow-ellipsis break-all overflow-clip" />
+        </div>
+        <Button variant={'secondary'} className="size-5 p-3" onClick={cancelReply}>
+          <X strokeWidth={2.5} />
+        </Button>
+      </>
+    }
+
+
+  </motion.div>
+})
 
 export default MessageBubble
