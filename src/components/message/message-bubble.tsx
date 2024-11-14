@@ -110,12 +110,9 @@ export const InputReplyBubble = memo(({ channel_id, message_id }: { channel_id: 
       <p className='text-[.65rem] italic'>{loading ? 'Loading Message...' : 'Invalid Message'}</p>
       : <>
         <div className="flex flex-col flex-1">
-          <p className='text-[.55rem]'>Replying to <MessageAuthor author={reply_user} /></p>
+          <p className='text-[.55rem] flex'>Replying to <MessageAuthor author={reply_user} /> <X className="ml-auto cursor-pointer" onClick={cancelReply} size={16} /></p>
           <MessageTextContent content={message.content.slice(0, 128)} className="block max-h-[1lh] overflow-ellipsis break-all overflow-clip" />
         </div>
-        <Button variant={'secondary'} className="size-5 p-3" onClick={cancelReply}>
-          <X strokeWidth={2.5} />
-        </Button>
       </>
     }
 

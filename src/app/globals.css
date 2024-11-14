@@ -82,7 +82,7 @@
     --message-bubble-sent: hsl(var(--hue) 45% 50% / 0.8);
     --message-bubble-sent-reply: hsl(var(--hue) 43% 52% / 0.95);
     --message-bubble-recv: hsl(var(--hue) 18% 19.5% / 0.8);
-    --message-bubble-recv-reply: hsl(var(--hue) 16% 25%);
+    --message-bubble-recv-reply: hsl(var(--hue) 18% 13.5%);
   }
 
   svg.logo {
