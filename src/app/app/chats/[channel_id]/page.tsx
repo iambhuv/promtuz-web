@@ -64,7 +64,11 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
           loadingMoreMessages={state.loadingMoreMessages}
           shouldNotLoadMessages={state.shouldNotLoadMessages}
           onClick={() => handleLoadMoreMessages(messagesEndRef, messages)} /> */}
-        <div id="messages" className='flex-1 overflow-auto sidebar-inset-scrollarea pr-4 pl-7' ref={messagesEndRef} onScroll={handleScroll}>
+        {/* <div className="flex items-center justify-center absolute w-full h-full left-0 bottom-0 bg-sidebar-accent/35 backdrop-blur-lg rounded-xl z-[999]"> */}
+          {/* <div className="w-96 h-96 bg-sidebar-accent rounded-xl"></div> */}
+          {/* <div className="absolute border-[3px] border-dashed border-white inset-y-16 inset-x-14 rounded-2xl"></div> */}
+        {/* </div> */}
+        <div id="messages" className='flex-1 overflow-auto sidebar-inset-scrollarea pr-4 pl-7 relative' ref={messagesEndRef} onScroll={handleScroll}>
           <div className="flex flex-1 gap-[.185rem] flex-col pt-4 pb-2">
             <div className="flex-1 w-full max-w-[800px] mx-auto">
               {state.loadingMoreMessages && <h1 className='text-center mb-5 italic'>Loading Messages...</h1>}

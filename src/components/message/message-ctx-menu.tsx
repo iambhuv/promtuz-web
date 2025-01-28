@@ -1,4 +1,4 @@
-import React, {  memo } from 'react'
+import React, { memo } from 'react'
 
 import {
   ContextMenu,
@@ -17,44 +17,54 @@ import { useChatStore } from '@/store/chat';
 
 const MessageContextMenuItem = motion.create(ContextMenuItem);
 
-type MenuList = ({ label: string, icon?: LucideIcon, seperator?: false, onClick?: () => any } | { label: string, seperator: true })[]
+type MenuList = ({ label: string, icon?: LucideIcon, seperator?: false, onClick?: () => any } | { label: string, seperator: true } | boolean)[]
 
 const MessageContextMenu = ({ children, message }: React.PropsWithChildren<{ message: Message }>) => {
   const deleteMessage = useStore(({ deleteMessage }) => deleteMessage);
+  const me = useStore(({ me }) => me);
   const chatState = useChatStore();
-  const { toast } = useToast()
+  const { toast } = useToast();
+
+  const isMessageSent = message.author_id == me.id;
 
   const MESSAGE_BUBBLE_CONTEXT: MenuList = [
     { label: "Copy", icon: Copy },
     {
       label: "Reply", icon: Reply, onClick() {
-        chatState.setInputState(message.channel_id, { type: "REPLYING", refMessage: message.id })
+        chatState.setInputState(message.channel_id, {
+          type: "REPLYING", refMessageID: message.id
+        })
       },
     },
-    { label: "Edit", icon: Edit3 },
-    {
-      label: "Delete", icon: Trash, onClick() {
-        deleteMessage(message.channel_id, message.id)
+    isMessageSent && {
+      label: "Edit", icon: Edit3, onClick() {
+        chatState.setInputState(message.channel_id, {
+          type: "EDITING", refMessageID: message.id
+        })
       },
     },
     {
       label: "Copy ID", async onClick() {
-        console.log('ayoo?');
-
         await navigator.clipboard.writeText(message.id);
         // TODO: Use sonner
         toast({ title: "Copied to Clipboard", className: 'p-3' })
+      },
+    },
+    isMessageSent && { label: "SEP1", seperator: true },
+    isMessageSent && {
+      label: "Delete", icon: Trash, onClick() {
+        deleteMessage(message.channel_id, message.id)
       },
     },
   ]
 
   return (
     <ContextMenu modal={false}>
-      <ContextMenuTrigger className='flex flex-col data-[state=open]:bg-border/50 focus-visible:bg-border/50 focus-visible:ring-2' tabIndex={0}>
+      <ContextMenuTrigger className='flex flex-col data-[state=open]:bg-border/50 focus-visible:bg-border/50 focus-visible:ring-2 transition-colors rounded-lg active:bg-border/35' tabIndex={0}>
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent className='w-24 border-none bg-sidebar-accent/60 backdrop-blur-xl'>
-        {MESSAGE_BUBBLE_CONTEXT.map(MENU_ITEM => (
+        {MESSAGE_BUBBLE_CONTEXT.filter(m => typeof m !== 'boolean').map(MENU_ITEM => (
           MENU_ITEM.seperator ?
             <ContextMenuSeparator key={MENU_ITEM.label} /> :
             <MessageContextMenuItem

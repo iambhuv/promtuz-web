@@ -20,7 +20,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-mode="dark">
+    <html lang="en" data-mode="dark" suppressHydrationWarning={true}>
+
       <body
         className={`${geistSans.variable} antialiased overflow-hidden`}
       >

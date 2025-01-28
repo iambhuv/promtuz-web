@@ -4,8 +4,8 @@ import { BaseEditor, Descendant, Editor, Element as SlateElement, Transforms } f
 import { Editable, ReactEditor, Slate } from 'slate-react';
 
 interface ChatInputProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: Descendant[];
+  onChange: (value: Descendant[]) => void;
   onPaste: (pasteEvent: React.ClipboardEvent<HTMLDivElement>) => void;
   onSubmit?: () => void;
   placeholder?: string;
@@ -59,14 +59,14 @@ export default function ChatInput({
 }: ChatInputProps) {
   // Initialize with empty paragraph
   const initialValue = useMemo<Descendant[]>(
-    () => value ? deserializeToSlate(value) : [{ type: 'paragraph', children: [{ text: '' }] }],
+    () => value || [{ type: 'paragraph', children: [{ text: '' }] }],
     [value]
   );
 
   const handleChange = useCallback(
     (newValue: Descendant[]) => {
       const newText = serializeToString(newValue);
-      onChange(newText);
+      onChange(newValue);
     },
     [onChange]
   );

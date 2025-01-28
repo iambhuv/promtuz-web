@@ -97,3 +97,10 @@ export function getFirstKey<T extends object>(obj: T): keyof T | null {
   }
   return null;
 }
+
+
+export async function hashFile(file: File) {
+  const ab = await crypto.subtle.digest("SHA-1", await file.arrayBuffer());
+
+  return Buffer.from(ab).toString('hex')
+}

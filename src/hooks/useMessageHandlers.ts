@@ -1,8 +1,9 @@
-import { APIResponse, handleRequest } from "@/lib/api";
+import { handleRequest } from "@/lib/api";
 import { useStore } from "@/store";
 import { useChatStore } from "@/store/chat";
-import { Message } from "@/store/store";
-import { useMemo, useState } from "react";
+import { MessagePayload } from "@/types/payloads";
+import Pako from "pako";
+import { useState } from "react";
 
 const useMessageHandlers = (channelId: string) => {
   const loadMessages = useStore(store => store.loadMessages);
@@ -48,17 +49,34 @@ const useMessageHandlers = (channelId: string) => {
   const handleSubmitMessage = async (text: string) => {
     if (state.sendingMessage) return false;
     setState(prev => ({ ...prev, sendingMessage: true }));
+    const attachments = chatState.getInputAttachments(channelId)
 
-    let response: APIResponse<Message>;
-    const handleMessageRequest = (handleRequest<Message>).bind(this, "POST", `/chats/${channelId}/messages`)
+    const jsonPayload: MessagePayload = {
+      content: text || "",
+    };
 
     if (inputState?.type == 'REPLYING') {
-      response = await handleMessageRequest({ content: text, reply_to: inputState.refMessage });
-      chatState.removeInputState(channelId)
-    } else {
-      response = await handleMessageRequest({ content: text });
+      jsonPayload['reply_to'] = inputState.refMessageID;
     }
 
+    const fdPayload = new FormData();
+
+    for (const file_hash in attachments) {
+      if (!jsonPayload['attachments']) jsonPayload['attachments'] = [];
+
+      const { file, ...attachment } = attachments[file_hash];
+
+      jsonPayload['attachments'].push(attachment);
+
+      const compressedFileBytes = Pako.deflate(await file.arrayBuffer());
+
+      fdPayload.append(`files`, new Blob([compressedFileBytes], { type: file.type, endings: "native" }), file.name);
+    }
+
+    fdPayload.set('json_payload', new Blob([Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))]));
+    const response = await handleRequest("POST", `/chats/${channelId}/messages`, fdPayload);
+
+    chatState.removeInputState(channelId)
     setState(prev => ({ ...prev, sendingMessage: false }));
 
     return !response.err;

@@ -1,14 +1,6 @@
 import { APIResponse } from "@/lib/api";
 import { AttachmentType } from "./enums";
-
-export type Attachment = {
-  id: string;
-  type: AttachmentType;
-  message_id: MessageID;
-  channel_id: ChannelID;
-  mime_type: string;
-  size: number;
-}
+import { Attachment } from "@/types";
 
 export type Message = {
   id: string;

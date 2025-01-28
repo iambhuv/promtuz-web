@@ -49,6 +49,13 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
     const messageElement = document.querySelector(`[data-message-id=${reply.id}]`);
     if (messageElement) {
       messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      const contextElem = messageElement.parentElement!;
+
+      contextElem.style.background = `hsl(var(--hue) 40 35 / .3)`;
+
+      setTimeout(() => {
+        contextElem.style.removeProperty('background');
+      }, 1250)
     } else {
       // TODO: Implement Virtual List
     }
@@ -68,6 +75,9 @@ const MessageContent = ({ message, sent, className }: { message: Message, sent: 
     <>
       <div className={cn("rounded-lg", sent ? "bg-[--message-bubble-sent]" : "bg-[--message-bubble-recv]", reply && "p-[.15rem]", className)}>
         {reply && <MessageContentReply message={message} sent={sent} />}
+        {/* {message.attachments.map(attachment => {
+          return <img src={``} />
+        })} */}
 
         <div className={cn("py-[0.2rem]", reply ? "px-1.5" : "px-2")}>
           <MessageTextContent content={message.content} />
