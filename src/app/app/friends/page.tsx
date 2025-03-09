@@ -2,22 +2,31 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarTrigger
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, ChevronDown, LucideEllipsisVertical, X } from "lucide-react";
-import Link from "next/link";
+import { useToast } from "@/hooks/useToast";
+import { handleRequest } from "@/lib/api";
+import { cn, createFallbackAvatar } from "@/lib/utils";
 import { useStore } from "@/store";
 import type { Relationship } from "@/store/store";
-import { useEffect, useMemo } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn, createFallbackAvatar } from "@/lib/utils";
-import { handleRequest } from "@/lib/api";
+import { Check, LucideEllipsisVertical, UserRoundSearch, X } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+
+type AlertState = { type: "success" | "error" | "warning", message: string };
 
 export default function Friends() {
   const relations = useStore((store) => store.relationships);
+  const { toast } = useToast()
+  const [friendUser, setFriendUser] = useState("");
+
+  const [alert, setAlert] = useState<AlertState | null>()
 
   const { friends, pending } = useMemo(() => {
     const pending: { sent: typeof relations, received: typeof relations } = { sent: [], received: [] };
@@ -33,6 +42,25 @@ export default function Friends() {
     return { pending, friends }
   }, [relations]);
 
+
+  const searchFriend = async () => {
+    const { err, data } = await handleRequest<{ code: number, response: any }>("POST", `/friends/@${friendUser}`);
+
+    if (data) {
+      if (data.code !== 200) {
+        toast({
+          title: data.response.error,
+          variant: 'destructive'
+        })
+      } else toast({ title: "Friend request sent." })
+    } else {
+      toast({
+        title: err.error,
+        variant: 'destructive'
+      })
+    }
+  }
+
   return (
     <>
       <header className="flex h-16 shrink-0 gap-2">
@@ -43,6 +71,13 @@ export default function Friends() {
         </div>
       </header>
       <div className="flex flex-col gap-5 p-4 pt-0 overflow-y-auto h-[calc(100dvh-(5rem))] sidebar-inset-scrollarea">
+        <div className="flex gap-2 items-center mt-3">
+          <Input value={friendUser} onChange={e => setFriendUser(e.target.value)} className="" placeholder="Friend Username" />
+          <Button size={'icon'} onClick={searchFriend}>
+            <UserRoundSearch />
+          </Button>
+        </div>
+
         <Tabs defaultValue="online">
           <TabsList>
             <TabsTrigger value="online">Online</TabsTrigger>
@@ -110,9 +145,25 @@ const RelationListItem = ({ isPending = false, relation }: { isPending: boolean,
       </div>
       <Separator orientation="vertical" className="my-2" /></>
     }
-    <Button variant={'secondary'} size={'icon'} className="[&_svg]:size-5 rounded-2xl">
-      <LucideEllipsisVertical strokeWidth={2.25} />
-    </Button>
+    <ContextMenu modal={false}>
+      <ContextMenuTrigger asChild>
+        <Button variant={'secondary'} size={'icon'} className="[&_svg]:size-5 rounded-2xl">
+          <LucideEllipsisVertical strokeWidth={2.25} />
+        </Button>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent className='w-24 border-none bg-sidebar-accent/60 backdrop-blur-xl'>
+
+        <ContextMenuItem
+          // whileTap={{ scale: .5 }}
+          // key={MENU_ITEM.label}
+          className='focus:bg-popover/40 text-xs'
+        // onClick={MENU_ITEM.onClick}
+        >
+          Hi
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   </div> : <Skeleton className="p-2 flex gap-3">
     <Skeleton className="h-10 w-10 rounded-lg" />
     <div className="flex flex-col mr-auto">

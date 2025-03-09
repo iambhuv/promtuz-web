@@ -5,6 +5,13 @@ import { MessagePayload } from "@/types/payloads";
 import Pako from "pako";
 import { useState } from "react";
 
+import {
+  Aes128Gcm,
+  CipherSuite,
+  DhkemP256HkdfSha256,
+  HkdfSha256,
+} from "@hpke/core";
+
 const useMessageHandlers = (channelId: string) => {
   const loadMessages = useStore(store => store.loadMessages);
 
@@ -73,7 +80,26 @@ const useMessageHandlers = (channelId: string) => {
       fdPayload.append(`files`, new Blob([compressedFileBytes], { type: file.type, endings: "native" }), file.name);
     }
 
+
+    const suite = new CipherSuite({
+      kem: new DhkemP256HkdfSha256(),
+      kdf: new HkdfSha256(),
+      aead: new Aes128Gcm(),
+    });
+
+
+    const rkp = await suite.kem.generateKeyPair();
+
+    // A sender encrypts a message with the recipient public key.
+    const sender = await suite.createSenderContext({
+      recipientPublicKey: rkp.publicKey,
+    });
+
+
+    const encrypted = await sender.seal(Buffer.from(Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))).buffer)
+
     fdPayload.set('json_payload', new Blob([Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))]));
+    fdPayload.set('enc_payload', new Blob([encrypted]));
     const response = await handleRequest("POST", `/chats/${channelId}/messages`, fdPayload);
 
     chatState.removeInputState(channelId)

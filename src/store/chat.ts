@@ -92,6 +92,7 @@ export const useChatStore = create(combine(<ChatState>
 
     },
 
+    // gets draft message's content for channel
     getInputContent(channel_id: ChannelID) {
       if (!get().contents[channel_id]) {
         set(({ contents }) => ({
@@ -104,6 +105,9 @@ export const useChatStore = create(combine(<ChatState>
       } else return get().contents[channel_id]
     },
 
+
+
+    // sets draft message's content for a given channel id
     setInputContent(channel_id: ChannelID, content: Descendant[]) {
       set(({ contents }) => ({
         contents: {

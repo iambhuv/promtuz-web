@@ -33,7 +33,7 @@ const RegisterPage = () => {
     if (confirm_password !== password || !username || !password || !confirm_password || !display_name) return;
 
     try {
-      const res = await fetch(`http://localhost:8888/register`, {
+      const res = await fetch(`${process.env.API_ENDPOINT}/register`, {
         method: "POST",
         body: JSON.stringify({ username, password, display_name }),
         headers: {

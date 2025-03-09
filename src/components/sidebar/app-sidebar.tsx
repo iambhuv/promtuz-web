@@ -48,7 +48,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof ResizablePa
       {/* <SidebarRail /> */}
       <SidebarContent>
         {/* <SidebarSearch /> */}
-{/* 
+
+        <NavChats />
+
         <SidebarGroup className="mt-auto">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -64,9 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof ResizablePa
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarGroup> */}
-
-        <NavChats />
+        </SidebarGroup>
 
       </SidebarContent>
       <SidebarFooter>

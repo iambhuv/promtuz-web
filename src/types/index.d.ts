@@ -15,7 +15,7 @@ export type Attachment = {
   /**
    * Name of original file
    */
-  name: string;
+  file_name: string;
   /**
    * File title
    */

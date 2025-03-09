@@ -10,6 +10,8 @@ import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useChatStore } from "@/store/chat";
 
+import mime from "mime-types";
+
 type MessageBubbleProps = { message: Message, nextMessage?: Message, previousMessage?: Message };
 
 const MessageAuthor = memo(({ author }: { author?: User }) => {
@@ -62,9 +64,11 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
   }
 
   return (
-    <div className={cn("py-[0.2rem] px-2 cursor-pointer rounded-md", sent ? "bg-[--message-bubble-sent-reply]" : 'bg-[--message-bubble-recv-reply]')} onClick={scrollToMessage}>
-      <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={reply_user} /></span>
-      <MessageTextContent content={reply.content} className="block mb-1 text-ellipsis overflow-hidden whitespace-nowrap" />
+    <div className="pt-[0.25rem] px-1 bg-[--message-bubble-sent] rounded-t-lg">
+      <div className={cn("py-[0.1rem] px-2 cursor-pointer rounded-md", sent ? "bg-[--message-bubble-sent-reply]" : 'bg-[--message-bubble-recv-reply]')} onClick={scrollToMessage}>
+        <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={reply_user} /></span>
+        <MessageTextContent content={reply.content} className="block mb-1 text-ellipsis overflow-hidden whitespace-nowrap" />
+      </div>
     </div>
   )
 }
@@ -73,13 +77,21 @@ const MessageContent = ({ message, sent, className }: { message: Message, sent: 
   const reply = message.reply_to;
   return (
     <>
-      <div className={cn("rounded-lg", sent ? "bg-[--message-bubble-sent]" : "bg-[--message-bubble-recv]", reply && "p-[.15rem]", className)}>
+      <div className={cn(reply && "p-[.15rem]", className)}>
         {reply && <MessageContentReply message={message} sent={sent} />}
-        {/* {message.attachments.map(attachment => {
-          return <img src={``} />
-        })} */}
 
-        <div className={cn("py-[0.2rem]", reply ? "px-1.5" : "px-2")}>
+        <div className="flex flex-col">
+          {message.attachments.map(attachment => {
+            const file_extension = attachment.file_name ? attachment.file_name.split(".").at(-1) : "";
+
+            const file_url = `${process.env.API_ENDPOINT}/attachments/${message.channel_id}/${message.id}/${attachment.id}` + (file_extension ? `.${file_extension}` : '');
+
+            // return attachment.file_name 
+            return <img key={attachment.id} src={file_url} className="max-w-60 w-full pt-px" />
+          })}
+        </div>
+
+        <div className={cn("py-[0.2rem] rounded-b-lg", !message.attachments.length && !reply && 'rounded-t-lg', sent ? "bg-[--message-bubble-sent]" : "bg-[--message-bubble-recv]", reply ? "px-1.5" : "px-2")}>
           <MessageTextContent content={message.content} />
 
           <span className="inline-flex pointer-events-none align-middle select-none float-right invisible relative pl-[4.5px]">

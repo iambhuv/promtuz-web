@@ -18,7 +18,7 @@ const LoginPage = () => {
 
     try {
       const { username, password } = Object.fromEntries(formData.entries());
-      const res = await fetch(`http://localhost:8888/login?cookie=true`, {
+      const res = await fetch(`${process.env.API_ENDPOINT}/login?cookie=true`, {
         method: "POST",
         body: JSON.stringify({ username, password }),
         credentials: 'include',

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import React, { useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { BaseEditor, Descendant, Editor, Element as SlateElement, Transforms } from 'slate';
 import { Editable, ReactEditor, Slate } from 'slate-react';
 
@@ -48,7 +48,7 @@ const deserializeToSlate = (text: string): Descendant[] => {
   }));
 };
 
-export default function ChatInput({
+export default memo(function ChatInput({
   value,
   onChange,
   onSubmit,
@@ -101,4 +101,4 @@ export default function ChatInput({
       </Slate>
     </div>
   );
-}
+})

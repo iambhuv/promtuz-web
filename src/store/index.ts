@@ -3,7 +3,7 @@ import { toQueryString } from '@/lib/utils';
 import pako from "pako";
 import { createContext, useContext } from 'react';
 import { useStore as _useStore, create, StoreApi } from 'zustand';
-import { Channel, ChatStatus, DataStore, Message, MeUser, User } from './store';
+import { Channel, ChatStatus, DataStore, Message, MeUser, Relationship, User } from './store';
 
 import { immer } from 'zustand/middleware/immer';
 
@@ -132,6 +132,19 @@ export const createStore = (initProps: Partial<DataStore>) => {
               ...channels,
             }
           }))
+        } else if (type == "RELATIONSHIP_CREATE") {
+          const relation = data as Relationship;
+
+          set(({ relationships }) => ({
+            relationships: {
+              [relation.id]: relation,
+              ...relationships,
+            }
+          }))
+        } else if (type == "RELATIONSHIP_DELETE") {
+          const relation_id = data?.id;
+
+          // REMOVE THE RELATION WITH A NOTIIFICATION IG?
         }
       }
 

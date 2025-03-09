@@ -25,6 +25,7 @@ export const MessageInput = memo(({
 }) => {
   const chatStore = useChatStore(store => store);
 
+  // Tryna get the "draft" message
   const message = chatStore.getInputContent(channel.id);
   const attachments = chatStore.getInputAttachments(channel.id);
   const editor = useMemo(() => withReact(withHistory(createEditor())), []);
