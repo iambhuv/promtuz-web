@@ -23,7 +23,7 @@ type InputStatus = (
 
 interface ChatState {
   inputs: Record<ChannelID, InputStatus | undefined>,
-  attachments: Record<ChannelID, Record<string, LocalAttachment>>,
+  attachments: Record<ChannelID, Map<string, LocalAttachment>>,
   contents: Record<ChannelID, Descendant[]>
 }
 
@@ -55,7 +55,7 @@ export const useChatStore = create(combine(<ChatState>
     },
 
     getInputAttachments(channel_id: ChannelID) {
-      return get().attachments[channel_id] || {}
+      return get().attachments[channel_id] || new Map();
     },
 
     async attach(channel_id: ChannelID, file: File, attachment_type: AttachmentType = "OTHER_FILE") {
@@ -63,7 +63,7 @@ export const useChatStore = create(combine(<ChatState>
       const attachments = get().attachments[channel_id];
 
       for (const file_hash in attachments) {
-        const attachment = attachments[file_hash];
+        const attachment = attachments.get(file_hash)!;
 
         if (attachment.name == file.name && attachment.size == file.size) return;
       }
@@ -80,10 +80,7 @@ export const useChatStore = create(combine(<ChatState>
       set(({ attachments }) => ({
         attachments: {
           ...attachments,
-          [channel_id]: {
-            ...(get().attachments[channel_id] || {}),
-            [hash]: attachment
-          }
+          [channel_id]: (attachments[channel_id] || new Map()).set(hash, attachment)
         }
       }))
     },
@@ -92,17 +89,8 @@ export const useChatStore = create(combine(<ChatState>
 
     },
 
-    // gets draft message's content for channel
     getInputContent(channel_id: ChannelID) {
-      if (!get().contents[channel_id]) {
-        set(({ contents }) => ({
-          contents: {
-            ...contents,
-            [channel_id]: EMPTY_DESCENDANT
-          }
-        }))
-        return EMPTY_DESCENDANT
-      } else return get().contents[channel_id]
+      return get().contents[channel_id] ?? EMPTY_DESCENDANT;
     },
 
 
@@ -121,8 +109,8 @@ export const useChatStore = create(combine(<ChatState>
     clearAttachments(channel_id: ChannelID) {
       set(({ attachments }) => ({
         attachments: {
-          ...attachments[channel_id],
-          [channel_id]: {}
+          ...attachments,
+          [channel_id]: new Map()
         }
       }))
     },

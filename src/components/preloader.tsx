@@ -4,7 +4,7 @@ import { useStore } from '@/store'
 import { ConnectionStatus } from '@/store/store'
 
 const Preloader = () => {
-  const status = useStore(({ connectionStatus }) => connectionStatus)
+  const status = useStore(store => store.connectionStatus)
 
   const statusMap: Record<ConnectionStatus, string> = {
     ACTIVE: 'Connected',

@@ -104,3 +104,16 @@ export async function hashFile(file: File) {
 
   return Buffer.from(ab).toString('hex')
 }
+
+export function beautifyLastSeen(date: string | number | Date) {
+  const lastSeen = new Date(+date);
+  if (isNaN(lastSeen.getTime())) return "Unknown";
+
+  const diff = Date.now() - lastSeen.getTime();
+  if (diff < 60_000) return "Just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} minutes ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} hours ago`;
+  if (diff < 7 * 86_400_000) return `${Math.floor(diff / 86_400_000)} days ago`;
+
+  return lastSeen.toLocaleDateString();
+}

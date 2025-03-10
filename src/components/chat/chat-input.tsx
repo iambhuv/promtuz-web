@@ -75,10 +75,8 @@ export default memo(function ChatInput({
     (event: React.KeyboardEvent) => {
       if (event.key === 'Enter' && !event.shiftKey && onSubmit) {
         event.preventDefault();
-        const text = serializeToString(editor.children);
-        if (text.trim()) {
-          onSubmit();
-        }
+        
+        onSubmit();
       }
     },
     [editor, onSubmit]
@@ -101,4 +99,4 @@ export default memo(function ChatInput({
       </Slate>
     </div>
   );
-})
+}, (prevProp, nextProp) => prevProp.value == nextProp.value)

@@ -14,15 +14,17 @@ import { MessageStatus } from '@/components/message/message-status';
 const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchParams: Promise<any> }) => {
   const { channel_id } = React.use(params);
 
-  const channel = useStore(({ channels }) => channels[channel_id]);
+  const channel = useStore(store => store.channels[channel_id]);
   if (!channel) return null;
-  const user = useStore(({ users, me }) => users.get(channel.members.find(m => m !== me.id) || ''));
+  const user = useStore(store => store.users.get(channel.members.find(m => m !== store.me.id) || ''));
   if (!user) return null;
 
-  const messages = useStore(({ messages }) => messages[channel.id]);
   const [unscrolled, setUnscrolled] = useState(false);
+
+  const messages = useStore(store => store.messages[channel.id]);
   const messageList = useMemo(() => Object.values(messages || {}).reverse(), [messages]);
-  const chatStatus = useStore(({ chat_status }) => chat_status?.[channel.id]?.[user.id]);
+  const chatStatus = useStore(store => store.chat_status?.[channel.id]?.[user.id]);
+  const setActiveChannel = useStore(store => store.setActiveChannel);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0, initialInView: false });
@@ -33,6 +35,12 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
   useEffect(() => {
     if (!messageList.length)
       handleInitialMessageLoad();
+
+    setActiveChannel(channel_id);
+
+    return () => {
+      setActiveChannel("");
+    }
   }, []);
 
   const handleScroll = (ev: React.UIEvent<HTMLDivElement, UIEvent>) => {
@@ -58,16 +66,9 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
   return (
     <>
       <ChatHeader user={user} />
-      <ChatPanel>
-        {/* <LoadMoreMessages
-          ref={loadMoreRef}
-          loadingMoreMessages={state.loadingMoreMessages}
-          shouldNotLoadMessages={state.shouldNotLoadMessages}
-          onClick={() => handleLoadMoreMessages(messagesEndRef, messages)} /> */}
-        {/* <div className="flex items-center justify-center absolute w-full h-full left-0 bottom-0 bg-sidebar-accent/35 backdrop-blur-lg rounded-xl z-[999]"> */}
-          {/* <div className="w-96 h-96 bg-sidebar-accent rounded-xl"></div> */}
-          {/* <div className="absolute border-[3px] border-dashed border-white inset-y-16 inset-x-14 rounded-2xl"></div> */}
-        {/* </div> */}
+      <ChatPanel 
+        
+      >
         <div id="messages" className='flex-1 overflow-auto sidebar-inset-scrollarea pr-4 pl-7 relative' ref={messagesEndRef} onScroll={handleScroll}>
           <div className="flex flex-1 gap-[.185rem] flex-col pt-4 pb-2">
             <div className="flex-1 w-full max-w-[800px] mx-auto">

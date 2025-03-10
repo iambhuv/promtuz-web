@@ -7,8 +7,8 @@ import { useStore } from '@/store';
 import { handleRequest } from '@/lib/api';
 
 export const MessageList = memo(forwardRef<HTMLDivElement, { messageList: Message[], channel_id: string }>(({ messageList, channel_id }, loadMoreRef) => {
-  const channel = useStore(({ channels }) => channels[channel_id]);
-  const ackMessage = useStore(({ ackMessage }) => ackMessage);
+  const channel = useStore(store => store.channels[channel_id]);
+  const ackMessage = useStore(store => store.ackMessage);
 
   const groupedMessages = useMemo(() => {
     return messageList.reduce<Array<{

@@ -19,11 +19,12 @@ const MessageContextMenuItem = motion.create(ContextMenuItem);
 
 type MenuList = ({ label: string, icon?: LucideIcon, seperator?: false, onClick?: () => any } | { label: string, seperator: true } | boolean)[]
 
-const MessageContextMenu = ({ children, message }: React.PropsWithChildren<{ message: Message }>) => {
-  const deleteMessage = useStore(({ deleteMessage }) => deleteMessage);
-  const me = useStore(({ me }) => me);
-  const chatState = useChatStore();
+const MessageContextMenu = ({ children, message, ...props }: React.PropsWithChildren<React.ComponentProps<typeof ContextMenuTrigger> & { message: Message }>) => {
+  const deleteMessage = useStore(store => store.deleteMessage);
+  const me = useStore(store => store.me);
+  const setInputState = useChatStore(state => state.setInputState);
   const { toast } = useToast();
+
 
   const isMessageSent = message.author_id == me.id;
 
@@ -31,14 +32,14 @@ const MessageContextMenu = ({ children, message }: React.PropsWithChildren<{ mes
     { label: "Copy", icon: Copy },
     {
       label: "Reply", icon: Reply, onClick() {
-        chatState.setInputState(message.channel_id, {
+        setInputState(message.channel_id, {
           type: "REPLYING", refMessageID: message.id
         })
       },
     },
     isMessageSent && {
       label: "Edit", icon: Edit3, onClick() {
-        chatState.setInputState(message.channel_id, {
+        setInputState(message.channel_id, {
           type: "EDITING", refMessageID: message.id
         })
       },
@@ -60,7 +61,7 @@ const MessageContextMenu = ({ children, message }: React.PropsWithChildren<{ mes
 
   return (
     <ContextMenu modal={false}>
-      <ContextMenuTrigger className='flex flex-col data-[state=open]:bg-border/50 focus-visible:bg-border/50 focus-visible:ring-2 transition-colors rounded-lg active:bg-border/35' tabIndex={0}>
+      <ContextMenuTrigger className='flex flex-col data-[state=open]:bg-border/50 focus-visible:bg-border/50 focus-visible:ring-2 transition-colors rounded-lg active:bg-border/35' tabIndex={0} {...props}>
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent className='w-24 border-none bg-sidebar-accent/60 backdrop-blur-xl'>

@@ -1,16 +1,14 @@
+import { useAPI } from "@/hooks/useAPI";
 import { cn, parseMessageDate, shouldMessageMemo, shouldMessageShowTime } from "@/lib/utils";
 import { useStore } from "@/store";
+import { useChatStore } from "@/store/chat";
 import { Message, User } from "@/store/store";
-import { forwardRef, Fragment, memo, use } from "react";
+import { motion } from "framer-motion";
+import { X } from "lucide-react";
+import { forwardRef, memo } from "react";
 import sanitize from "sanitize-html";
 import MessageContextMenu from "./message-ctx-menu";
-import { motion } from "framer-motion"
-import { useAPI } from "@/hooks/useAPI";
-import { X } from "lucide-react";
-import { Button } from "../ui/button";
-import { useChatStore } from "@/store/chat";
 
-import mime from "mime-types";
 
 type MessageBubbleProps = { message: Message, nextMessage?: Message, previousMessage?: Message };
 
@@ -19,15 +17,20 @@ const MessageAuthor = memo(({ author }: { author?: User }) => {
 })
 
 const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ message, nextMessage, previousMessage }, loadMoreRef) => {
-  const me = useStore(({ me }) => me)
-  const author = useStore(({ users }) => users.get(message.author_id));
+  const me = useStore(store => store.me)
+  const author = useStore(store => store.users.get(message.author_id));
+  const setInputState = useChatStore(state => state.setInputState);
 
   if (!author) return <div className='italic'>Message without Author</div>;
 
   const sent = me.id == author.id
   const shouldShowTime = shouldMessageShowTime({ message, nextMessage });
 
-  return <MessageContextMenu message={message}>
+  return <MessageContextMenu onDoubleClick={() => {
+    setInputState(message.channel_id, {
+      type: "REPLYING", refMessageID: message.id
+    })
+  }} message={message}>
     <motion.div
       layout="position"
       className={cn(sent ?
@@ -45,7 +48,7 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
 
 export const MessageContentReply = ({ message, sent }: { message: Message, sent: boolean }) => {
   const reply = message.reply_to;
-  const reply_user = useStore(({ users }) => users.get(reply.author_id));
+  const reply_user = useStore(store => store.users.get(reply.author_id));
 
   const scrollToMessage = () => {
     const messageElement = document.querySelector(`[data-message-id=${reply.id}]`);
@@ -64,7 +67,7 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
   }
 
   return (
-    <div className="pt-[0.25rem] px-1 bg-[--message-bubble-sent] rounded-t-lg">
+    <div className={cn("pt-[0.25rem] px-1 rounded-t-lg", sent ? 'bg-[--message-bubble-sent]' : "bg-[--message-bubble-recv]")}>
       <div className={cn("py-[0.1rem] px-2 cursor-pointer rounded-md", sent ? "bg-[--message-bubble-sent-reply]" : 'bg-[--message-bubble-recv-reply]')} onClick={scrollToMessage}>
         <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={reply_user} /></span>
         <MessageTextContent content={reply.content} className="block mb-1 text-ellipsis overflow-hidden whitespace-nowrap" />
@@ -75,6 +78,9 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
 
 const MessageContent = ({ message, sent, className }: { message: Message, sent: boolean } & React.HTMLProps<HTMLDivElement>) => {
   const reply = message.reply_to;
+
+  const is_empty_content = message.content.trim() == "";
+
   return (
     <>
       <div className={cn(reply && "p-[.15rem]", className)}>
@@ -87,18 +93,22 @@ const MessageContent = ({ message, sent, className }: { message: Message, sent: 
             const file_url = `${process.env.API_ENDPOINT}/attachments/${message.channel_id}/${message.id}/${attachment.id}` + (file_extension ? `.${file_extension}` : '');
 
             // return attachment.file_name 
-            return <img key={attachment.id} src={file_url} className="max-w-60 w-full pt-px" />
+            return <img key={attachment.id} src={file_url} className="max-w-60 w-full pt-px rounded-t-lg" />
           })}
         </div>
 
-        <div className={cn("py-[0.2rem] rounded-b-lg", !message.attachments.length && !reply && 'rounded-t-lg', sent ? "bg-[--message-bubble-sent]" : "bg-[--message-bubble-recv]", reply ? "px-1.5" : "px-2")}>
+        {!is_empty_content ? <div className={cn("py-[0.2rem] rounded-b-lg", !message.attachments.length && !reply && 'rounded-t-lg', sent ? "bg-[--message-bubble-sent]" : "bg-[--message-bubble-recv]", reply ? "px-1.5" : "px-2")}>
           <MessageTextContent content={message.content} />
 
           <span className="inline-flex pointer-events-none align-middle select-none float-right invisible relative pl-[4.5px]">
             <span className={cn('text-[12px]/[1] opacity-75 select-none text-nowrap')}>{parseMessageDate(message.created_at)}</span>
             <span className={cn('text-[12px]/[1] opacity-75 select-none text-nowrap visible absolute -bottom-[calc(100%_+_3px)]')}>{parseMessageDate(message.created_at)}</span>
           </span>
-        </div>
+        </div> : <span className="inline-flex pointer-events-none align-middle select-none float-right invisible relative my-1">
+          <span className={cn('text-[12px]/[1] opacity-75 select-none text-nowrap')}>{parseMessageDate(message.created_at)}</span>
+          <span className={cn('text-[12px]/[1] opacity-75 select-none text-nowrap visible absolute')}>{parseMessageDate(message.created_at)}</span>
+        </span>}
+
       </div>
     </>
   )
@@ -110,12 +120,12 @@ export const MessageTextContent = ({ content, className }: { content: string, cl
 
 
 export const InputReplyBubble = memo(({ channel_id, message_id }: { channel_id: string, message_id: string }) => {
-  let message_cache = useStore(({ messages }) => messages[channel_id][message_id]);
+  let message_cache = useStore(store => store.messages[channel_id][message_id]);
 
   let { data: message, loading } = message_cache ? { data: message_cache, loading: false } : useAPI<Message>('GET', `/chats/${channel_id}/messages/${message_id}`);
 
-  const reply_user = useStore(({ users }) => users.get(message ? message.author_id : ""));
-  const removeInputState = useChatStore().removeInputState
+  const reply_user = useStore(store => store.users.get(message ? message.author_id : ""));
+  const removeInputState = useChatStore(state => state.removeInputState)
 
   // if (loading || !message) return (
   // <motion.div layout className="w-full h-fit px-2.5 pt-2 pb-1.5 rounded-lg bg-[--message-bubble-recv-reply]">

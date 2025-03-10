@@ -5,18 +5,12 @@ import { MessagePayload } from "@/types/payloads";
 import Pako from "pako";
 import { useState } from "react";
 
-import {
-  Aes128Gcm,
-  CipherSuite,
-  DhkemP256HkdfSha256,
-  HkdfSha256,
-} from "@hpke/core";
-
 const useMessageHandlers = (channelId: string) => {
   const loadMessages = useStore(store => store.loadMessages);
 
-  const chatState = useChatStore();
-  const inputState = chatState.inputs[channelId];
+  const getInputAttachments = useChatStore(state => state.getInputAttachments);
+  const removeInputState = useChatStore(state => state.removeInputState);
+  const inputState = useChatStore(state => state.inputs[channelId]);
 
   const [state, setState] = useState({
     loading: false,
@@ -56,56 +50,41 @@ const useMessageHandlers = (channelId: string) => {
   const handleSubmitMessage = async (text: string) => {
     if (state.sendingMessage) return false;
     setState(prev => ({ ...prev, sendingMessage: true }));
-    const attachments = chatState.getInputAttachments(channelId)
+    const attachments = getInputAttachments(channelId)
 
-    const jsonPayload: MessagePayload = {
-      content: text || "",
-    };
+    if (text.trim() || attachments.size) {
+      const jsonPayload: MessagePayload = {
+        content: text || "",
+      };
 
-    if (inputState?.type == 'REPLYING') {
-      jsonPayload['reply_to'] = inputState.refMessageID;
-    }
+      if (inputState?.type == 'REPLYING') {
+        jsonPayload['reply_to'] = inputState.refMessageID;
+      }
 
-    const fdPayload = new FormData();
+      const fdPayload = new FormData();
 
-    for (const file_hash in attachments) {
-      if (!jsonPayload['attachments']) jsonPayload['attachments'] = [];
+      // for (const file_hash in attachments) {
+      // console.log(attachments);
 
-      const { file, ...attachment } = attachments[file_hash];
+      for (const { file, ...attachment } of attachments.values()) {
+        if (!jsonPayload['attachments']) jsonPayload['attachments'] = [];
 
-      jsonPayload['attachments'].push(attachment);
+        jsonPayload['attachments'].push(attachment);
 
-      const compressedFileBytes = Pako.deflate(await file.arrayBuffer());
+        const compressedFileBytes = Pako.deflate(await file.arrayBuffer());
 
-      fdPayload.append(`files`, new Blob([compressedFileBytes], { type: file.type, endings: "native" }), file.name);
-    }
+        fdPayload.append(`files`, new Blob([compressedFileBytes], { type: file.type, endings: "native" }), file.name);
+      }
 
+      fdPayload.set('json_payload', new Blob([Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))]));
+      console.log([...fdPayload.entries()]);
+      const response = await handleRequest("POST", `/chats/${channelId}/messages`, fdPayload);
 
-    const suite = new CipherSuite({
-      kem: new DhkemP256HkdfSha256(),
-      kdf: new HkdfSha256(),
-      aead: new Aes128Gcm(),
-    });
+      removeInputState(channelId)
+      setState(prev => ({ ...prev, sendingMessage: false }));
 
-
-    const rkp = await suite.kem.generateKeyPair();
-
-    // A sender encrypts a message with the recipient public key.
-    const sender = await suite.createSenderContext({
-      recipientPublicKey: rkp.publicKey,
-    });
-
-
-    const encrypted = await sender.seal(Buffer.from(Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))).buffer)
-
-    fdPayload.set('json_payload', new Blob([Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))]));
-    fdPayload.set('enc_payload', new Blob([encrypted]));
-    const response = await handleRequest("POST", `/chats/${channelId}/messages`, fdPayload);
-
-    chatState.removeInputState(channelId)
-    setState(prev => ({ ...prev, sendingMessage: false }));
-
-    return !response.err;
+      return !response.err;
+    } else return false
   };
 
   return { state, setState, handleInitialMessageLoad, handleLoadMoreMessages, handleSubmitMessage };

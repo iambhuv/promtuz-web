@@ -3,7 +3,7 @@ import { ChannelID } from '@/store/store';
 import { useRef } from 'react';
 
 const useTypingStatus = (channel: ChannelID) => {
-  const ws_emit = useStore(({ emit }) => emit);
+  const ws_emit = useStore(store => store.emit);
   const typingRef = useRef<any>(null)
 
   const handleTypingStatus = (value: string) => {

@@ -5,7 +5,7 @@ import { Channel } from '@/store/store';
 import { PasteEvent } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { File, FileAudio, FileImage, FileVideo2, Paperclip, SendHorizonal } from 'lucide-react';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { createEditor, Descendant } from 'slate';
 import { withHistory } from 'slate-history';
 import { withReact } from 'slate-react';
@@ -23,38 +23,42 @@ export const MessageInput = memo(({
   onSubmit: (text: string) => Promise<boolean>,
   channel: Channel
 }) => {
-  const chatStore = useChatStore(store => store);
+  const setInputContent = useChatStore(state => state.setInputContent);
+  const getInputContent = useChatStore(state => state.getInputContent);
+  const setInputState = useChatStore(state => state.setInputState);
+  const getInputAttachments = useChatStore(state => state.getInputAttachments);
+  const clearAttachments = useChatStore(state => state.clearAttachments);
+  const clearContent = useChatStore(state => state.clearContent);
+  const attach = useChatStore(state => state.attach);
 
   // Tryna get the "draft" message
-  const message = chatStore.getInputContent(channel.id);
-  const attachments = chatStore.getInputAttachments(channel.id);
+  const message = getInputContent(channel.id);
+  const attachments = getInputAttachments(channel.id);
   const editor = useMemo(() => withReact(withHistory(createEditor())), []);
   const { handleTypingStatus } = useTypingStatus(channel.id);
   const { handleFilePaste } = useAttachments();
 
-  const inputState = useChatStore().inputs[channel.id];
+  const inputState = useChatStore(state => state.inputs[channel.id]);
 
   const handleChange = (value: Descendant[]) => {
-    chatStore.setInputContent(channel.id, value)
+    setInputContent(channel.id, value)
 
     if (serializeToString(value) != serializeToString(message)) handleTypingStatus(serializeToString(value));
   };
 
 
   const handleSubmit = async () => {
-    const inputContentState = chatStore.getInputContent(channel.id);
+    const inputContentState = getInputContent(channel.id);
 
     const text = serializeToString(inputContentState);
-    if (text.trim()) {
-      onSubmit(text).then((shouldClear) => {
-        if (shouldClear) {
+    onSubmit(text).then((shouldClear) => {
+      if (shouldClear) {
 
-          clearEditor(editor);
-          chatStore.clearAttachments(channel.id);
-          chatStore.clearContent(channel.id);
-        }
-      })
-    }
+        if (text.trim()) clearEditor(editor);
+        clearAttachments(channel.id);
+        clearContent(channel.id);
+      }
+    })
   };
 
   const handlePaste = async (pasteEvent: PasteEvent) => {
@@ -69,6 +73,33 @@ export const MessageInput = memo(({
     }
   }, [inputState])
 
+
+  useEffect(() => {
+    const chatInput = document.getElementById('chat-input')?.parentElement;
+
+    const handleEscape = (ev: HTMLElementEventMap['keydown']) => {
+      if (ev.key == 'Escape') {
+        if (inputState?.type != "TEXT") {
+          setInputState(channel.id, {
+            type: "TEXT"
+          })
+        }
+        else {
+          for (const _ in attachments) {
+            clearAttachments(channel.id);
+            break;
+          }
+        }
+      }
+    }
+
+    chatInput?.addEventListener('keydown', handleEscape);
+
+    return () => {
+      chatInput?.removeEventListener('keydown', handleEscape);
+    }
+  });
+
   return (
     <div className="px-4">
       <AnimatePresence >
@@ -82,7 +113,7 @@ export const MessageInput = memo(({
 
           {/* {Object.values(attachments).map(a => a.mime_type)} */}
           <div className="flex">
-            {Object.values(attachments).map(attachment => {
+            {Array.from(attachments).map(([_, attachment]) => {
               const blob = URL.createObjectURL(attachment.file);
               return <div className="flex" key={attachment.hash}>
                 <img src={blob} alt="" className='max-w-32 object-contain w-full' />
@@ -122,7 +153,7 @@ export const MessageInput = memo(({
                     input.addEventListener("change", async () => {
                       if (input.files) {
                         for (const file of input.files) {
-                          await chatStore.attach(channel.id, file, "IMAGE")
+                          await attach(channel.id, file, "IMAGE")
                         }
                       }
 

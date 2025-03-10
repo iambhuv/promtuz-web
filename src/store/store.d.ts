@@ -33,7 +33,7 @@ export type User = {
   display_name: string
 }
 
-export type MeUser = User & { created_at: DateString }
+export type MeUser = User
 
 export interface Friend extends User {
   accepted_at: string
@@ -60,24 +60,30 @@ export type Relationship = {
 export type ChannelID = string;
 export type UserID = string;
 export type MessageID = string;
+export type RelationID = string;
 
 export type ChatStatus = { status: "IDLE" | "TYPING", user_id: UserID, channel_id: ChannelID };
+
+export type Presence = { presence: "OFFLINE" | "ONLINE", lastSeen: number | null }
 
 export type ConnectionStatus = "ACTIVE" | "FAILED" | "CONNECTING" | "RETRYING" | "CLIENT_OFFLINE" | "SERVER_OFFLINE"
 
 export type StoreState = {
   loaded: boolean;
   me: MeUser;
-  relationships: Relationship[];
+  relationships: Map<RelationID, Relationship>;
   chats: Chat[];
   channels: Record<ChannelID, Channel>;
   ws?: WebSocket;
   users: Map<UserID, User>;
+  presence: Map<UserID, Presence>
   messages: Record<ChannelID, Record<MessageID, Message>>;
 
   connectionStatus: ConnectionStatus;
 
   chat_status: Record<ChannelID, Record<UserID, ChatStatus['status']>>
+
+  activeChannel: ChannelID,
 }
 
 // TODO: 
@@ -92,6 +98,8 @@ export type StoreActions = {
   deleteMessage(channel_id: string, message_id: string): Promise<void>
   ackMessage(channel_id: string, message_id: string): Promise<void>
   getMessage(channel_id: string, message_id: string): Promise<APIResponse<Message>>
+
+  setActiveChannel(channel_id: ChannelID): void;
 }
 
 export type DataStore = StoreState & StoreActions;

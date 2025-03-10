@@ -7,6 +7,8 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '../ui/sidebar'
 import { Channel } from '@/store/store'
 import { Skeleton } from '../ui/skeleton'
+import { useChatStore } from '@/store/chat'
+import { serializeToString } from '../chat/chat-input'
 
 const NavChats = () => {
   const messages = useStore(store => store.messages);
@@ -50,11 +52,16 @@ const NavChat = memo(({ channel }: { channel: Channel }) => {
   const user = useStore(store => store.users.get(user_id))
   if (!user) return;
 
-  const latest_last_message = useStore(({ messages }) => messages?.[channel.id]?.[Object.keys(messages[channel.id])[0]!]);
+  const latest_last_message = useStore(store => store.messages?.[channel.id]?.[Object.keys(store.messages[channel.id])[0]!]);
   const last_message = latest_last_message || channel.last_message;
 
-  const status = useStore(({ chat_status }) => chat_status[channel.id]?.[user_id])
+  const status = useStore(store => store.chat_status[channel.id]?.[user_id])
+  const activeChannel = useStore(store => store.activeChannel)
 
+  const draft = serializeToString(useChatStore(state => state.getInputContent(channel.id)));
+
+
+  const presence = useStore(store => store.presence.get(user_id))
 
   return <ContextMenu modal={false}>
     <ContextMenuTrigger asChild>
@@ -64,9 +71,11 @@ const NavChat = memo(({ channel }: { channel: Channel }) => {
         className='p-1 box-content h-8'
       >
         <Link href={`/app/chats/${channel.id}`} className='data-[state="open"]:bg-sidebar-accent'>
-          <Avatar className="h-8 w-8 rounded-sm">
+          <Avatar className="h-8 w-8 rounded-sm relative overflow-visible">
             {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
             <AvatarFallback className="rounded-sm text-sm font-semibold text-muted-foreground">{createFallbackAvatar(user.display_name)}</AvatarFallback>
+
+            {presence && presence.presence !== 'OFFLINE' && <span className="size-2 bg-[#23a55a] rounded-full absolute bottom-0 right-0"></span>}
           </Avatar>
           <div className="grid flex-1 text-left leading-tight">
             <div className={cn('truncate text-[0.8rem] font-semibold', !channel.unread_message_count && 'text-muted-foreground')}>{user.display_name}
@@ -87,7 +96,11 @@ const NavChat = memo(({ channel }: { channel: Channel }) => {
                   </span>
                   Typing...</div>
                 : <span className={cn('truncate text-[.65rem]', !channel.unread_message_count && 'text-muted-foreground')}>
-                  {last_message?.content || ''}
+                  {
+                    draft && activeChannel !== channel.id ?
+                      <span><strong>DRAFT:</strong> {draft}</span>
+                      : last_message?.content || ((last_message && !last_message?.content)
+                        ? <i>Sent an Attachment</i> : '')}
                 </span>
             }
           </div>

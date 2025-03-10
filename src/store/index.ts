@@ -3,10 +3,12 @@ import { toQueryString } from '@/lib/utils';
 import pako from "pako";
 import { createContext, useContext } from 'react';
 import { useStore as _useStore, create, StoreApi } from 'zustand';
-import { Channel, ChatStatus, DataStore, Message, MeUser, Relationship, User } from './store';
+import { Channel, ChatStatus, DataStore, Message, MeUser, Presence, RelationID, Relationship, User, UserID } from './store';
 
 import { immer } from 'zustand/middleware/immer';
+import { enableMapSet } from 'immer';
 
+enableMapSet();
 
 export type Store = ReturnType<typeof createStore>;
 
@@ -16,14 +18,6 @@ function deflatePayload(data: Uint8Array) {
 
 
 function setupChannelList(channels: Record<string, Channel>, store: StoreApi<DataStore>) {
-  // channels.map((channel) => ({
-  //   ...channel,
-  // get last_message() {
-  //   const state = store.getState().messages;
-  //   return state[channel.id][Object.keys(state[channel.id])[0]]
-  // }
-  // }))
-
   for (const channel in channels) {
     Object.assign(channels[channel], {
       get last_message() {
@@ -38,6 +32,8 @@ function setupChannelList(channels: Record<string, Channel>, store: StoreApi<Dat
 }
 
 
+let HEARTBEAT: number;
+
 export const createStore = (initProps: Partial<DataStore>) => {
   const store = create<DataStore>()(immer((set, get, store) => ({
     loaded: false,
@@ -45,10 +41,14 @@ export const createStore = (initProps: Partial<DataStore>) => {
     messages: {},
     ws: undefined,
     connectionStatus: 'CONNECTING',
-    relationships: [],
+    relationships: new Map(),
     me: undefined as unknown as MeUser,
     chats: [],
     channels: {},
+
+    presence: new Map(),
+
+    activeChannel: "",
 
     chat_status: {},
     ...initProps,
@@ -66,10 +66,16 @@ export const createStore = (initProps: Partial<DataStore>) => {
       const ws = new WebSocket(new URL("/ws", process.env.API_ENDPOINT?.replace('http', 'ws')))
       ws.binaryType = "arraybuffer"
 
-      ws.onopen = (ws) => {
+      ws.onopen = (wse) => {
         console.info(`[RealTime] Established connection in ${tries} try.`);
 
         set({ connectionStatus: "ACTIVE" });
+
+        HEARTBEAT = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            get().emit("PING", {});
+          }
+        }, 15000) as unknown as number;
       }
 
       ws.onmessage = (ev: MessageEvent) => {
@@ -77,7 +83,10 @@ export const createStore = (initProps: Partial<DataStore>) => {
 
         console.info(`[${type}]:`, data);
 
-        if (type == "ME") {
+        if (type == "PONG") {
+
+        }
+        else if (type == "ME") {
           // Reset Tries
           tries = 0
 
@@ -88,6 +97,7 @@ export const createStore = (initProps: Partial<DataStore>) => {
             me: init.me,
             relationships: init.relationships || get().relationships,
             users: new Map(users) || get().users,
+            presence: new Map(Object.entries(init.presence)),
             channels: setupChannelList(init.channels, store) || get().channels,
             loaded: true
           })
@@ -136,19 +146,46 @@ export const createStore = (initProps: Partial<DataStore>) => {
           const relation = data as Relationship;
 
           set(({ relationships }) => ({
-            relationships: {
-              [relation.id]: relation,
-              ...relationships,
-            }
+            relationships: relationships.set(relation.id, relation)
           }))
         } else if (type == "RELATIONSHIP_DELETE") {
           const relation_id = data?.id;
 
-          // REMOVE THE RELATION WITH A NOTIIFICATION IG?
+          set(({ relationships }) => {
+            const updated_relations = new Map(relationships);
+            updated_relations.delete(relation_id);
+
+            return ({
+              relationships: updated_relations
+            })
+          })
+        } else if (type == "RELATIONSHIP_UPDATE") {
+          const relation = data as { id: RelationID } & Partial<Omit<Relationship, 'id'>>;
+
+          set(({ relationships }) => {
+            const updated_relations = new Map(relationships);
+            const current_relationship = updated_relations.get(relation.id);
+
+            if (!current_relationship) return {};
+
+            updated_relations.set(relation.id, { ...current_relationship, ...relation });
+
+            return ({
+              relationships: updated_relations
+            })
+          })
+        } else if (type == "PRESENCE_UPDATE") {
+          const { id, ...presence } = data as { id: UserID } & Presence;
+
+          set(({ presence: presences }) => ({
+            presence: new Map(presences).set(id, presence)
+          }))
         }
       }
 
       ws.onclose = (ev) => {
+        clearInterval(HEARTBEAT);
+
         set({ connectionStatus: "FAILED" });
         console.log(`[RealTime] Failed to connect in ${tries} try. Retrying in ${tries} second`);
 
@@ -222,7 +259,13 @@ export const createStore = (initProps: Partial<DataStore>) => {
 
     async getMessage(channel_id, message_id) {
       return await handleRequest<Message>(`GET`, `/chats/${channel_id}/messages/${message_id}`)
-    }
+    },
+
+    setActiveChannel(channel_id) {
+      set(({
+        activeChannel: channel_id
+      }))
+    },
   })));
 
   return store
