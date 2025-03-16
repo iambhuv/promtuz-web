@@ -16,8 +16,10 @@ import { motion } from 'framer-motion';
 const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchParams: Promise<any> }) => {
   const { channel_id } = React.use(params);
 
-  const channel = useStore(store => store.channels[channel_id]);
+  const channel = useStore(store => store.channels.get(channel_id));
+  
   if (!channel) return null;
+
   const user = useStore(store => store.users.get(channel.members.find(m => m !== store.me.id) || ''));
   if (!user) return null;
 
@@ -29,7 +31,7 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
   const chatStatus = useStore(store => store.chat_status?.[channel.id]?.[user.id]);
   const setActiveChannel = useStore(store => store.setActiveChannel);
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0, initialInView: false });
 
   const { state, handleInitialMessageLoad, handleLoadMoreMessages, handleSubmitMessage } =

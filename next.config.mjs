@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: false,
   env: {
-    API_ENDPOINT: 'https://api.scsservice.cloud',
+    API_ENDPOINT: 'http://localhost:8888',
     CHAT_MESSAGES_LIMIT: "50",
     LOAD_MORE_THRESHOLD: "15"
   }

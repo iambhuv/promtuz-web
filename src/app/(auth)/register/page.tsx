@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { handleRequest } from "@/lib/api";
+import { jsonBytes } from "@/lib/utils";
 // import { z } from "zod";
 
 // const formSchema = z.object({
@@ -33,17 +35,20 @@ const RegisterPage = () => {
     if (confirm_password !== password || !username || !password || !confirm_password || !display_name) return;
 
     try {
-      const res = await fetch(`${process.env.API_ENDPOINT}/register`, {
-        method: "POST",
-        body: JSON.stringify({ username, password, display_name }),
-        headers: {
-          "content-type": "application/json"
-        }
-      });
+      // const res = await fetch(`${process.env.API_ENDPOINT}/register`, {
+      //   method: "POST",
+      //   body: JSON.stringify({ username, password, display_name }),
+      //   headers: {
+      //     "content-type": "application/json"
+      //   }
+      // });
 
-      if (res.status == 200) {
-        router.push('/login');
-      }
+      const { data, err } = await handleRequest<{ id: string }>("POST", `/register`, jsonBytes({
+        username, password, display_name
+      }));
+
+
+      if (!err && data && data.id) router.push('/login');
     } catch (err) {
       console.error(err);
     }

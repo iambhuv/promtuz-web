@@ -37,7 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof ResizablePa
           </div>
           <Link className="flex-1" href="/app">
             <div className="grid text-center text-lg">
-              <span className="truncate font-black">PTZ</span>
+              <span className="truncate font-black">Promtuz</span>
             </div>
           </Link>
           <Button size="icon" variant={'ghost'} className="rounded-2xl">

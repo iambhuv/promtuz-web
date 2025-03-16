@@ -21,21 +21,10 @@ const LoginPage = () => {
     try {
       const { username, password } = Object.fromEntries(formData.entries());
 
-      const { data, err } = await handleRequest<{ token: string }>("POST", `/login?cookie=true`, jsonBytes({
-        username, password
+      const { data, err } = await handleRequest<{ token: string }>("POST", `/login`, jsonBytes({
+        username, password, cookie: true
       }));
-
-      console.log(data, err);
-
-
-      // const res = await fetch(`${process.env.API_ENDPOINT}/login?cookie=true`, {
-      //   method: "POST",
-      //   body: JSON.stringify({ username, password }),
-      //   credentials: 'include',
-      //   headers: {
-      //     "content-type": "application/json"
-      //   }
-      // });
+      
       if (data && data.token !== null) {
         localStorage.setItem("token", data.token);
 

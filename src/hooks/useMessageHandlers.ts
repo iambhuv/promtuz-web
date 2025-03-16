@@ -28,7 +28,7 @@ const useMessageHandlers = (channelId: string) => {
     setState(prev => ({ ...prev, loading: false }));
   };
 
-  const handleLoadMoreMessages = async (messagesEndRef: React.RefObject<HTMLDivElement>, messages: any) => {
+  const handleLoadMoreMessages = async (messagesEndRef: React.RefObject<HTMLDivElement | null>, messages: any) => {
     const cursor = Object.keys(messages).at(-1);
     if (!cursor) return setState(prev => ({ ...prev, shouldNotLoadMessages: true }));
 

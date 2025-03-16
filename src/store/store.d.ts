@@ -72,9 +72,8 @@ export type StoreState = {
   loaded: boolean;
   me: MeUser;
   relationships: Map<RelationID, Relationship>;
-  chats: Chat[];
-  channels: Record<ChannelID, Channel>;
   ws?: WebSocket;
+  channels: Map<ChannelID, Channel>;
   users: Map<UserID, User>;
   presence: Map<UserID, Presence>
   messages: Record<ChannelID, Record<MessageID, Message>>;

@@ -42,9 +42,8 @@ export const createStore = (initProps: Partial<DataStore>) => {
     ws: undefined,
     connectionStatus: 'CONNECTING',
     relationships: new Map(),
-    me: undefined as unknown as MeUser,
-    chats: [],
-    channels: {},
+    me: undefined as unknown as User,
+    channels: new Map(),
 
     presence: new Map(),
 
@@ -87,49 +86,49 @@ export const createStore = (initProps: Partial<DataStore>) => {
       ws.onmessage = (ev: MessageEvent) => {
         const { type, data } = JSON.parse(deflatePayload(ev.data));
 
-        console.info(`[${type}]:`, data);
+        if (data) console.info(`[${type}]:`, data);
 
-        if (type == "PONG") {
-
-        }
+        if (type == "PONG") { }
         else if (type == "ME") {
           // Reset Tries
           tries = 0
 
           const init = data;
-          const users: [string, User][] = (<User[]>init.users || []).concat([init.me]).map(({ id, ...user }) => [id, { id, ...user }])
-
-          const relationships = new Map((<Relationship[]>init.relationships).map(rel => [rel.id, rel]));
 
           set({
             me: init.me,
-            relationships: relationships || get().relationships,
-            users: new Map(users) || get().users,
+            relationships: new Map(Object.entries(init.relationships)),
+            users: new Map(Object.entries(init.users)),
             presence: new Map(Object.entries(init.presence)),
-            channels: setupChannelList(init.channels, store) || get().channels,
             loaded: true
           })
         } else if (type == "MESSAGE_CREATE") {
           const msg = data;
-          const chat_id = msg.channel_id;
+          const channel_id = msg.channel_id;
 
           set({
             messages: {
               ...(get().messages || {}),
-              [chat_id]: {
+              [channel_id]: {
                 [msg.id]: msg,
-                ...(get().messages[chat_id] || {})
+                ...(get().messages[channel_id] || {})
               }
             }
           })
 
-          set(state => {
-            if (get().me.id !== msg.author_id)
-              void (++state.channels[chat_id].unread_message_count)
-            else {
-              void (state.channels[chat_id].unread_message_count = 0)
-            }
-          })
+          set((state) => {
+            if (!state.channels.has(channel_id)) return;
+
+            const channels = new Map(state.channels);
+            const channel = channels.get(channel_id)!;
+
+            channels.set(channel_id, {
+              ...channel,
+              unread_message_count: get().me.id === msg.author_id ? 0 : (channel.unread_message_count ?? 0) + 1,
+            });
+
+            return { channels };
+          });
         } else if (type == "CHAT_STATUS") {
           const status = data as ChatStatus;
           set(({ chat_status }) => ({
@@ -264,7 +263,17 @@ export const createStore = (initProps: Partial<DataStore>) => {
         unread_msgs++;
       }
 
-      set(state => { void (state.channels[channel_id].unread_message_count = 0) })
+
+      set(state => {
+        const channels = new Map(state.channels);
+
+        channels.set(channel_id, {
+          ...channels.get(channel_id)!,
+          unread_message_count: 0,
+        });
+
+        return { channels }
+      })
 
       await handleRequest<null>(`POST`, `/chats/${channel_id}/messages/${message_id}/ack`);
     },
