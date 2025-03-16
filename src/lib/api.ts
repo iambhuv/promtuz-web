@@ -12,7 +12,6 @@ export const handleRequest = async <D>(method: string, path: string, body?: Body
       body: formData ? body : JSON.stringify(body),
       credentials: 'include',
       headers: {
-        'Content-Type': formData ? 'application/octet-stream' : 'application/json',
         'Accept-Encoding': 'deflate',
         ...headers
       }

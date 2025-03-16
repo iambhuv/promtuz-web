@@ -1,9 +1,9 @@
 import { cn, createFallbackAvatar } from '@/lib/utils'
 import { useStore } from '@/store'
 import { useChatStore } from '@/store/chat'
-import { Channel } from '@/store/store'
+import { Channel, User, UserID } from '@/store/store'
 import Link from 'next/link'
-import React, { memo, useMemo } from 'react'
+import React, { memo, useCallback, useMemo } from 'react'
 import { serializeToString } from '../chat/chat-input'
 import { Avatar, AvatarFallback } from '../ui/avatar'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '../ui/context-menu'
@@ -14,24 +14,24 @@ const NavChats = () => {
   const messages = useStore(store => store.messages);
   const channels = useStore(store => store.channels);
 
-  // const sortChannelsByCreatedAt = useCallback((ch1: Channel, ch2: Channel) => {
-  //   // Get first message more efficiently
-  //   const ch1Messages = messages?.[ch1.id];
-  //   const ch2Messages = messages?.[ch2.id];
+  const sortChannelsByCreatedAt = useCallback((ch1: Channel, ch2: Channel) => {
+    // Get first message more efficiently
+    const ch1Messages = messages?.[ch1.id];
+    const ch2Messages = messages?.[ch2.id];
 
-  //   const ch1_latest = ch1Messages && Object.values(ch1Messages)[0]?.created_at;
-  //   const ch2_latest = ch2Messages && Object.values(ch2Messages)[0]?.created_at;
+    const ch1_latest = ch1Messages && Object.values(ch1Messages)[0]?.created_at;
+    const ch2_latest = ch2Messages && Object.values(ch2Messages)[0]?.created_at;
 
-  //   // Cache dates to avoid multiple conversions
-  //   const date1 = new Date(ch1_latest || ch1.last_message?.created_at || ch1.created_at).getTime();
-  //   const date2 = new Date(ch2_latest || ch2.last_message?.created_at || ch2.created_at).getTime();
+    // Cache dates to avoid multiple conversions
+    const date1 = new Date(ch1_latest || ch1.last_message?.created_at || ch1.created_at).getTime();
+    const date2 = new Date(ch2_latest || ch2.last_message?.created_at || ch2.created_at).getTime();
 
-  //   return date2 - date1;
-  // }, [messages, channels])
+    return date2 - date1;
+  }, [messages, channels])
 
 
   // const channelsArray = useMemo(() => Object.values(channels || {}), [channels]);
-  const channel_list = useMemo(() => [...channels.values()], [channels, messages]);
+  const channel_list = useMemo(() => [...channels.values()].sort(sortChannelsByCreatedAt), [channels, messages]);
 
   return (
     <SidebarGroup style={{ '--custom-scrollbar-bg': 'hsl(var(--sidebar-background))' } as React.CSSProperties} className='overflow-y-auto sidebar-inset-scrollarea flex-1 flex flex-col'>
@@ -49,14 +49,16 @@ const NavChats = () => {
           <span className='text-primary-foreground/65'>Make some friends Bro</span>
         </div> : ''}
         {channel_list.map((channel) => {
-          return <SidebarMenuItem key={channel.id}><NavChat channel={channel} /></SidebarMenuItem>
+          return <SidebarMenuItem key={channel.id}>
+            {channel.type == "DIRECT_MESSAGES" ? <NavDMChat channel={channel} /> : <NavGroupChat channel={channel} />}
+          </SidebarMenuItem>
         })}
       </SidebarMenu>
     </SidebarGroup>
   )
 }
 
-const NavChat = memo(({ channel }: { channel: Channel }) => {
+const NavDMChat = memo(({ channel }: { channel: Channel }) => {
   const me = useStore(store => store.me)
 
   // @ts-expect-error
@@ -128,6 +130,54 @@ const NavChat = memo(({ channel }: { channel: Channel }) => {
       <ContextMenuItem>Profile</ContextMenuItem>
       <ContextMenuSeparator />
       <ContextMenuItem>Copy User ID</ContextMenuItem>
+      <ContextMenuItem>Copy Channel ID</ContextMenuItem>
+    </ContextMenuContent>
+  </ContextMenu>
+})
+
+const NavGroupChat = memo(({ channel }: { channel: Channel }) => {
+  const latest_last_message = useStore(store => store.messages?.[channel.id]?.[Object.keys(store.messages[channel.id])[0]!]);
+  const last_message = latest_last_message || channel.last_message;
+
+  const activeChannel = useStore(store => store.activeChannel)
+
+  const draft = serializeToString(useChatStore(state => state.getInputContent(channel.id)));
+
+  return <ContextMenu modal={false}>
+    <ContextMenuTrigger asChild>
+      <SidebarMenuButton
+        size="default"
+        asChild
+        className='p-1 box-content h-8'
+      >
+        <Link href={`/app/chats/${channel.id}`} className='data-[state="open"]:bg-sidebar-accent'>
+          <Avatar className="h-8 w-8 rounded-sm relative overflow-visible">
+            {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
+            <AvatarFallback className="rounded-sm text-sm font-semibold text-muted-foreground">{createFallbackAvatar(channel.name)}</AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left leading-tight">
+            <div className={cn('truncate text-[0.8rem] font-semibold', !channel.unread_message_count && 'text-muted-foreground')}>{channel.name}
+              {channel.unread_message_count > 0 ?
+                <div className='size-5 float-right text-[.55rem] truncate font-medium rounded-full flex items-center justify-center bg-primary'>
+                  <span className='pt-[1px]'>{channel.unread_message_count > 99 ? '99+' : channel.unread_message_count}</span>
+                </div>
+                : null}
+            </div>
+
+            <span className={cn('truncate text-[.65rem]', !channel.unread_message_count && 'text-muted-foreground')}>
+              {
+                draft && activeChannel !== channel.id ?
+                  <span><strong>DRAFT:</strong> {draft}</span>
+                  : last_message?.content || ((last_message && !last_message?.content)
+                    ? <i>Sent an Attachment</i> : '')}
+            </span>
+          </div>
+        </Link>
+      </SidebarMenuButton>
+    </ContextMenuTrigger>
+    <ContextMenuContent className="w-44">
+      <ContextMenuItem>Details</ContextMenuItem>
+      <ContextMenuSeparator />
       <ContextMenuItem>Copy Channel ID</ContextMenuItem>
     </ContextMenuContent>
   </ContextMenu>

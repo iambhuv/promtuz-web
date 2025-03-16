@@ -98,8 +98,9 @@ export const createStore = (initProps: Partial<DataStore>) => {
           set({
             me: init.me,
             relationships: new Map(Object.entries(init.relationships)),
-            users: new Map(Object.entries(init.users)),
+            users: new Map(Object.entries(Object.assign(init.users, { [init.me.id]: init.me }))),
             presence: new Map(Object.entries(init.presence)),
+            channels: new Map(Object.entries(init.channels)),
             loaded: true
           })
         } else if (type == "MESSAGE_CREATE") {

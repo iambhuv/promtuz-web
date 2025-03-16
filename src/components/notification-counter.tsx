@@ -33,7 +33,7 @@ function updateFavicon(count: number) {
 const NotitificationCounter = () => {
   const notiCount = useStore(store => {
     let count = 0;
-    for (const channel of Object.values(store.channels)) {
+    for (const channel of store.channels.values()) {
       count += channel.unread_message_count;
       if (count > 9) return 10;
     }

@@ -77,8 +77,10 @@ const useMessageHandlers = (channelId: string) => {
       }
 
       fdPayload.set('json_payload', new Blob([Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))]));
-      console.log([...fdPayload.entries()]);
-      const response = await handleRequest("POST", `/chats/${channelId}/messages`, fdPayload);
+      
+      const response = await handleRequest("POST", `/chats/${channelId}/messages`, fdPayload, {
+        // 'content-type': `multipart/form-data; boundary=${fdPayload.}`
+      });
 
       removeInputState(channelId)
       setState(prev => ({ ...prev, sendingMessage: false }));

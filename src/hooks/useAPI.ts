@@ -1,7 +1,7 @@
 import { handleRequest } from '@/lib/api';
 import { useState, useEffect } from 'react';
 
-export const useAPI = <D>(method: string, path: string, body?: object, headers: object = {}) => {
+export const useAPI = <D>(method: string, path: string, body?: BodyInit, headers: object = {}) => {
   const [data, setData] = useState<D | null>(null);
   const [error, setError] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);

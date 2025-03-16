@@ -1,13 +1,12 @@
 import { parseMessageDate } from '@/lib/utils';
+import { useStore } from '@/store';
 import { Message } from '@/store/store';
 import { forwardRef, memo, useEffect, useMemo } from 'react';
 import MessageBubble from './message-bubble';
 import MessageTime from './message-time';
-import { useStore } from '@/store';
-import { handleRequest } from '@/lib/api';
 
 export const MessageList = memo(forwardRef<HTMLDivElement, { messageList: Message[], channel_id: string }>(({ messageList, channel_id }, loadMoreRef) => {
-  const channel = useStore(store => store.channels[channel_id]);
+  const channel = useStore(store => store.channels.get(channel_id)!);
   const ackMessage = useStore(store => store.ackMessage);
 
   const groupedMessages = useMemo(() => {
@@ -57,6 +56,8 @@ export const MessageList = memo(forwardRef<HTMLDivElement, { messageList: Messag
     }
   }, [messageList])
 
+  console.log(groupedMessages);
+  
   return (
     groupedMessages.map(({ day, displayDate, messages, messageTillNow }) => {
       return <div className="time-group relative" data-time={day} key={day}>
@@ -64,7 +65,7 @@ export const MessageList = memo(forwardRef<HTMLDivElement, { messageList: Messag
 
         {messages.map((msg, msg_ind) => {
           const index = messageTillNow + msg_ind
-          return <MessageBubble message={msg} key={msg.id} nextMessage={messages[index + 1]} previousMessage={messages[index - 1]} ref={index == +process.env.LOAD_MORE_THRESHOLD ? loadMoreRef : undefined} />
+          return <MessageBubble channel_type={channel.type} message={msg} key={msg.id} nextMessage={messages[msg_ind + 1]} previousMessage={messages[msg_ind - 1]} ref={msg_ind == +process.env.LOAD_MORE_THRESHOLD ? loadMoreRef : undefined} />
         })}
       </div>
     })

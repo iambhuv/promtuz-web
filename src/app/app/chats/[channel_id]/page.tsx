@@ -10,26 +10,25 @@ import { ChatPanel } from '@/components/chat/chat-panel';
 import { MessageInput } from '@/components/message/message-input';
 import { MessageList } from '@/components/message/message-list';
 import { MessageStatus } from '@/components/message/message-status';
-import AttachmentUI from '@/components/attachment-ui';
 import { motion } from 'framer-motion';
 
 const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchParams: Promise<any> }) => {
   const { channel_id } = React.use(params);
 
   const channel = useStore(store => store.channels.get(channel_id));
-  
-  if (!channel) return null;
 
-  const user = useStore(store => store.users.get(channel.members.find(m => m !== store.me.id) || ''));
-  if (!user) return null;
+  if (!channel) return null;
 
   const [unscrolled, setUnscrolled] = useState(false);
   const [hoveringFile, setHoveringFile] = useState(false);
 
   const messages = useStore(store => store.messages[channel.id]);
   const messageList = useMemo(() => Object.values(messages || {}).reverse(), [messages]);
-  const chatStatus = useStore(store => store.chat_status?.[channel.id]?.[user.id]);
   const setActiveChannel = useStore(store => store.setActiveChannel);
+
+
+  // FIXME: imple for gc support
+  // const chatStatus = useStore(store => store.chat_status?.[channel.id]?.[user.id]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0, initialInView: false });
@@ -60,7 +59,7 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
     if (messagesEndRef.current && !state.loadingMoreMessages && !unscrolled) {
       messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
-  }, [messages, chatStatus]);
+  }, [messages, /*chatStatus*/]);
 
   useEffect(() => {
     if (inView && !state.shouldNotLoadMessages && messageList.length && !state.loadingMoreMessages) {
@@ -70,7 +69,7 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
 
   return (
     <>
-      <ChatHeader user={user} />
+      <ChatHeader channel={channel} />
       <motion.div
 
         onDragOver={(e) => {
@@ -79,7 +78,7 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
           setHoveringFile(true);
         }}
         onDragLeave={(e) => {
-          e.stopPropagation(); 
+          e.stopPropagation();
           setHoveringFile(false)
         }}
         onDrop={(e) => {
@@ -93,14 +92,15 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
 
         <ChatPanel
         >
-          <div id="messages" className='flex-1 overflow-auto sidebar-inset-scrollarea pr-4 pl-7 relative' ref={messagesEndRef} onScroll={handleScroll}>
-            <div className="flex flex-1 gap-[.185rem] flex-col pt-4 pb-2">
-              <div className="flex-1 w-full max-w-[800px] mx-auto">
+          <div id="messages" className='flex  flex-col flex-1 overflow-auto sidebar-inset-scrollarea pr-4 pl-7 relative' ref={messagesEndRef} onScroll={handleScroll}>
+            <div className="flex flex-1 w-full"></div>
+            <div className="flex gap-[.185rem] flex-col pt-4 pb-4">
+              <div className="w-full max-w-[800px] mx-auto mt-auto relative">
                 {state.loadingMoreMessages && <h1 className='text-center mb-5 italic'>Loading Messages...</h1>}
 
                 <MessageList messageList={messageList} channel_id={channel_id} ref={loadMoreRef} />
 
-                <MessageStatus status={chatStatus} />
+                {/* <MessageStatus status={chatStatus} /> */}
 
                 <div ref={messagesEndRef}></div>
               </div>

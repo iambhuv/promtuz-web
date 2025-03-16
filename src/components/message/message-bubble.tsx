@@ -8,15 +8,16 @@ import { X } from "lucide-react";
 import { forwardRef, memo } from "react";
 import sanitize from "sanitize-html";
 import MessageContextMenu from "./message-ctx-menu";
+import { ChannelType } from "@/store/enums";
 
 
-type MessageBubbleProps = { message: Message, nextMessage?: Message, previousMessage?: Message };
+type MessageBubbleProps = { message: Message, nextMessage?: Message, previousMessage?: Message, channel_type: ChannelType };
 
 const MessageAuthor = memo(({ author }: { author?: User }) => {
   return author?.display_name ? author?.display_name : author?.username ? `@${author?.username}` : <i>Unknown Author</i>
 })
 
-const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ message, nextMessage, previousMessage }, loadMoreRef) => {
+const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ message, nextMessage, previousMessage, channel_type }, loadMoreRef) => {
   const me = useStore(store => store.me)
   const author = useStore(store => store.users.get(message.author_id));
   const setInputState = useChatStore(state => state.setInputState);
@@ -25,6 +26,8 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
 
   const sent = me.id == author.id
   const shouldShowTime = shouldMessageShowTime({ message, nextMessage });
+
+  const shouldShowAuthor = message.author_id !== previousMessage?.author_id;
 
   return <MessageContextMenu onDoubleClick={() => {
     setInputState(message.channel_id, {
@@ -41,7 +44,8 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
       data-created-at={message.created_at}
       ref={loadMoreRef}
     >
-      <MessageContent message={message} sent={sent} />
+      {/* {channel_type == ChannelType.GROUP_CHAT && shouldShowAuthor ? <span>{author.display_name}</span> : null} */}
+      <MessageContent message={message} sent={sent} shouldShowAuthor={shouldShowAuthor} />
     </motion.div>
   </MessageContextMenu>
 }), shouldMessageMemo)
@@ -76,8 +80,9 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
   )
 }
 
-const MessageContent = ({ message, sent, className }: { message: Message, sent: boolean } & React.HTMLProps<HTMLDivElement>) => {
+const MessageContent = ({ message, sent, className, shouldShowAuthor }: { message: Message, sent: boolean, shouldShowAuthor: boolean } & React.HTMLProps<HTMLDivElement>) => {
   const reply = message.reply_to;
+  const author = useStore(store => store.users.get(message.author_id));
 
   const is_empty_content = message.content.trim() == "";
 
@@ -98,6 +103,7 @@ const MessageContent = ({ message, sent, className }: { message: Message, sent: 
         </div>
 
         {!is_empty_content ? <div className={cn("py-[0.2rem] rounded-b-lg", !message.attachments.length && !reply && 'rounded-t-lg', sent ? "bg-(--message-bubble-sent)" : "bg-(--message-bubble-recv)", reply ? "px-1.5" : "px-2")}>
+          {shouldShowAuthor && <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={author} /></span>}
           <MessageTextContent content={message.content} />
 
           <span className="inline-flex pointer-events-none align-middle select-none float-right invisible relative pl-[4.5px]">

@@ -81,8 +81,8 @@ export const shouldMessageShowTime = ({ message, nextMessage }: MessageBubblePro
 export const shouldMessageMemo = (p1: MessageBubbleProps, p2: MessageBubbleProps) => {
   // console.log(p1, p2);
 
-  // if (p1.nextMessage?.content !== p2.nextMessage?.content) return false;
-  // if (p2.previousMessage?.content !== p1.previousMessage?.content) return false
+  if (p1.nextMessage?.content !== p2.nextMessage?.content) return false;
+  if (p2.previousMessage?.content !== p1.previousMessage?.content) return false
 
   // message change re-render!
   if (p1.message.content !== p2.message.content) return false;

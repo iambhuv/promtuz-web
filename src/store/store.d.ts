@@ -1,5 +1,5 @@
 import { APIResponse } from "@/lib/api";
-import { AttachmentType } from "./enums";
+import { AttachmentType, ChannelType } from "./enums";
 import { Attachment } from "@/types";
 
 export type Message = {
@@ -17,10 +17,10 @@ export type Message = {
 
 export type Channel = {
   id: string
-  is_private: boolean
   last_message?: Message;
 
-  max_members: number;
+  type: ChannelType;
+
   members: string[];
   name: string // name o' channel snapchat like shi
   created_at: string;
