@@ -67,8 +67,8 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
   }
 
   return (
-    <div className={cn("pt-[0.25rem] px-1 rounded-t-lg", sent ? 'bg-[--message-bubble-sent]' : "bg-[--message-bubble-recv]")}>
-      <div className={cn("py-[0.1rem] px-2 cursor-pointer rounded-md", sent ? "bg-[--message-bubble-sent-reply]" : 'bg-[--message-bubble-recv-reply]')} onClick={scrollToMessage}>
+    <div className={cn("pt-[0.25rem] px-1 rounded-t-lg", sent ? 'bg-(--message-bubble-sent)' : "bg-(--message-bubble-recv)")}>
+      <div className={cn("py-[0.1rem] px-2 cursor-pointer rounded-md", sent ? "bg-(--message-bubble-sent-reply)" : 'bg-(--message-bubble-recv-reply)')} onClick={scrollToMessage}>
         <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={reply_user} /></span>
         <MessageTextContent content={reply.content} className="block mb-1 text-ellipsis overflow-hidden whitespace-nowrap" />
       </div>
@@ -97,7 +97,7 @@ const MessageContent = ({ message, sent, className }: { message: Message, sent: 
           })}
         </div>
 
-        {!is_empty_content ? <div className={cn("py-[0.2rem] rounded-b-lg", !message.attachments.length && !reply && 'rounded-t-lg', sent ? "bg-[--message-bubble-sent]" : "bg-[--message-bubble-recv]", reply ? "px-1.5" : "px-2")}>
+        {!is_empty_content ? <div className={cn("py-[0.2rem] rounded-b-lg", !message.attachments.length && !reply && 'rounded-t-lg', sent ? "bg-(--message-bubble-sent)" : "bg-(--message-bubble-recv)", reply ? "px-1.5" : "px-2")}>
           <MessageTextContent content={message.content} />
 
           <span className="inline-flex pointer-events-none align-middle select-none float-right invisible relative pl-[4.5px]">
@@ -128,7 +128,7 @@ export const InputReplyBubble = memo(({ channel_id, message_id }: { channel_id: 
   const removeInputState = useChatStore(state => state.removeInputState)
 
   // if (loading || !message) return (
-  // <motion.div layout className="w-full h-fit px-2.5 pt-2 pb-1.5 rounded-lg bg-[--message-bubble-recv-reply]">
+  // <motion.div layout className="w-full h-fit px-2.5 pt-2 pb-1.5 rounded-lg bg-(--message-bubble-recv-reply)">
   //   <p className='text-[.65rem] italic'>{loading ? 'Loading Message...' : 'Invalid Message'}</p>
   // </motion.div>
   // );
@@ -137,13 +137,13 @@ export const InputReplyBubble = memo(({ channel_id, message_id }: { channel_id: 
     removeInputState(channel_id)
   }
 
-  return <motion.div className="w-full h-fit px-2.5 pt-2 pb-1.5 rounded-lg bg-[--message-bubble-recv-reply] flex items-center relative z-10">
+  return <motion.div className="w-full h-fit px-2.5 pt-2 pb-1.5 rounded-lg bg-(--message-bubble-recv-reply) flex items-center relative z-10">
     {loading || !message ?
       <p className='text-[.65rem] italic'>{loading ? 'Loading Message...' : 'Invalid Message'}</p>
       : <>
         <div className="flex flex-col flex-1">
           <p className='text-[.55rem] flex'>Replying to <MessageAuthor author={reply_user} /> <X className="ml-auto cursor-pointer" onClick={cancelReply} size={16} /></p>
-          <MessageTextContent content={message.content.slice(0, 128)} className="block max-h-[1lh] overflow-ellipsis break-all overflow-clip" />
+          <MessageTextContent content={message.content.slice(0, 128)} className="block max-h-[1lh] text-ellipsis break-all overflow-clip" />
         </div>
       </>
     }

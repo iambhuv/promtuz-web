@@ -91,7 +91,7 @@ export default memo(function ChatInput({
       >
         <Editable
           id='chat-input'
-          className={cn("outline-none max-h-[200px] overflow-y-auto message-input", className)}
+          className={cn("outline-hidden max-h-[200px] overflow-y-auto message-input", className)}
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
           onPaste={onPaste}

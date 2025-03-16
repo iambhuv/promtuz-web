@@ -9,7 +9,7 @@ export const ChatHeader = ({ user }: { user: User }) => {
   const presence = useStore(store => store.presence.get(user.id));
 
   return (
-    <header className="flex h-16 shrink-0 gap-2 border-b z-[9999]">
+    <header className="flex h-16 shrink-0 gap-2 border-b z-9999">
       <div className="flex items-center gap-2 px-4">
         {/* <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" /> */}
