@@ -54,8 +54,14 @@ export const createStore = (initProps: Partial<DataStore>) => {
     ...initProps,
 
     async loadUser(id: string) {
-      id.toString()
-      return get().me!
+      const { err, data } = await handleRequest<User>("GET", `/user/${id}`);
+
+
+      if (!err && data && data.id) {
+        set(({ users }) => ({
+          users: new Map(users).set(data.id, data)
+        }))
+      }
     },
 
     async initConnection(tries: number = 1) {
@@ -93,9 +99,11 @@ export const createStore = (initProps: Partial<DataStore>) => {
           const init = data;
           const users: [string, User][] = (<User[]>init.users || []).concat([init.me]).map(({ id, ...user }) => [id, { id, ...user }])
 
+          const relationships = new Map((<Relationship[]>init.relationships).map(rel => [rel.id, rel]));
+
           set({
             me: init.me,
-            relationships: init.relationships || get().relationships,
+            relationships: relationships || get().relationships,
             users: new Map(users) || get().users,
             presence: new Map(Object.entries(init.presence)),
             channels: setupChannelList(init.channels, store) || get().channels,
@@ -145,8 +153,12 @@ export const createStore = (initProps: Partial<DataStore>) => {
         } else if (type == "RELATIONSHIP_CREATE") {
           const relation = data as Relationship;
 
+          // Check and load user
+
+          if (!get().users.get(relation.user_id)) get().loadUser(relation.user_id)
+
           set(({ relationships }) => ({
-            relationships: relationships.set(relation.id, relation)
+            relationships: new Map(relationships).set(relation.id, relation)
           }))
         } else if (type == "RELATIONSHIP_DELETE") {
           const relation_id = data?.id;

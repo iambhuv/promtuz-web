@@ -12,6 +12,7 @@ import { serializeToString } from '../chat/chat-input'
 
 const NavChats = () => {
   const messages = useStore(store => store.messages);
+  const channels = useStore(store => store.channels);
 
   const sortChannelsByCreatedAt = useCallback((ch1: Channel, ch2: Channel) => {
     // Get first message more efficiently
@@ -26,9 +27,8 @@ const NavChats = () => {
     const date2 = new Date(ch2_latest || ch2.last_message?.created_at || ch2.created_at).getTime();
 
     return date2 - date1;
-  }, [messages])
+  }, [messages, channels])
 
-  const channels = useStore(store => store.channels);
 
   const channelsArray = useMemo(() => Object.values(channels || {}), [channels]);
   const channel_list = useMemo(() => channelsArray.sort(sortChannelsByCreatedAt), [channels, messages]);
@@ -46,10 +46,15 @@ const NavChats = () => {
 
 const NavChat = memo(({ channel }: { channel: Channel }) => {
   const me = useStore(store => store.me)
-  const user_id = channel.members.find(id => id !== me.id);
-  if (!user_id) return;
 
-  const user = useStore(store => store.users.get(user_id))
+  // @ts-expect-error
+  const user_id = channel.members.find(id => (id?.id || id) !== me.id);
+  
+  if (!user_id) return;
+  
+  // @ts-expect-error
+  const user = useStore(store => store.users.get(user_id?.id || user_id))
+  
   if (!user) return;
 
   const latest_last_message = useStore(store => store.messages?.[channel.id]?.[Object.keys(store.messages[channel.id])[0]!]);

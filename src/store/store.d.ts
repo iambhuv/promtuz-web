@@ -90,7 +90,7 @@ export type StoreState = {
 export type RealtimeEvent = string;
 
 export type StoreActions = {
-  loadUser(id: string): Promise<User>
+  loadUser(id: string): Promise<void>
   initConnection(tries?: number): Promise<void>
   loadMessages(user_id: string, before?: string, limit?: number, beforeStateSet?: () => void): Promise<number>
 

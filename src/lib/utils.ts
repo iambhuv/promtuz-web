@@ -2,6 +2,7 @@ import { Message } from "@/store/store"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge";
 import moment from "moment";
+import Pako from "pako";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -116,4 +117,13 @@ export function beautifyLastSeen(date: string | number | Date) {
   if (diff < 7 * 86_400_000) return `${Math.floor(diff / 86_400_000)} days ago`;
 
   return lastSeen.toLocaleDateString();
+}
+
+
+export function jsonBytes(payload: Record<string, any>) {
+  // const formData = new FormData();
+
+  // formData.set('json_payload', )
+
+  return new Blob([Pako.deflate(Buffer.from(JSON.stringify(payload)))]);
 }

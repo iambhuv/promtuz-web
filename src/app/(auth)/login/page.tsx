@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { handleRequest } from "@/lib/api";
+import { jsonBytes } from "@/lib/utils";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -18,24 +20,27 @@ const LoginPage = () => {
 
     try {
       const { username, password } = Object.fromEntries(formData.entries());
-      const res = await fetch(`${process.env.API_ENDPOINT}/login?cookie=true`, {
-        method: "POST",
-        body: JSON.stringify({ username, password }),
-        credentials: 'include',
-        headers: {
-          "content-type": "application/json"
-        }
-      });
 
-      if (res.status == 200) {
-        const data = await res.json();
+      const { data, err } = await handleRequest<{ token: string }>("POST", `/login?cookie=true`, jsonBytes({
+        username, password
+      }));
 
-        if (data.token !== null) {
-          localStorage.setItem("token", data.token);
+      console.log(data, err);
 
-          const redirectPath = searchParams.get('redirect_path');
-          router.push((redirectPath ? decodeURIComponent(redirectPath) : '/app'))
-        }
+
+      // const res = await fetch(`${process.env.API_ENDPOINT}/login?cookie=true`, {
+      //   method: "POST",
+      //   body: JSON.stringify({ username, password }),
+      //   credentials: 'include',
+      //   headers: {
+      //     "content-type": "application/json"
+      //   }
+      // });
+      if (data && data.token !== null) {
+        localStorage.setItem("token", data.token);
+
+        const redirectPath = searchParams.get('redirect_path');
+        router.push((redirectPath ? decodeURIComponent(redirectPath) : '/app'))
       }
     } catch (err) {
       console.error(err);
