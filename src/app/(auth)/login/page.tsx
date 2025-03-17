@@ -9,8 +9,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { handleRequest } from "@/lib/api";
 import { jsonBytes } from "@/lib/utils";
+import { Suspense } from "react";
 
-const LoginPage = () => {
+const Login = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -24,7 +25,7 @@ const LoginPage = () => {
       const { data, err } = await handleRequest<{ token: string }>("POST", `/login`, jsonBytes({
         username, password, cookie: true
       }));
-      
+
       if (data && data.token !== null) {
         localStorage.setItem("token", data.token);
 
@@ -61,6 +62,14 @@ const LoginPage = () => {
       </form>
     </div >
   );
+}
+
+const LoginPage = () => {
+  return (
+    <Suspense>
+      <Login />
+    </Suspense>
+  )
 };
 
 
