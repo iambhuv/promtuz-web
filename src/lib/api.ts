@@ -7,7 +7,7 @@ export const handleRequest = async <D>(method: string, path: string, body?: Body
       formData = true;
     }
 
-    const res = await fetch(new URL(path, process.env.API_ENDPOINT), {
+    const res = await fetch(new URL(path, process.env.NEXT_PUBLIC_API_ENDPOINT), {
       method,
       body: formData ? body : JSON.stringify(body),
       credentials: 'include',

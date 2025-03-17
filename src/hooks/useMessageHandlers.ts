@@ -24,7 +24,7 @@ const useMessageHandlers = (channelId: string) => {
 
     setState(prev => ({ ...prev, loading: true }));
     const count = await loadMessages(channelId);
-    if (count < +process.env.CHAT_MESSAGES_LIMIT) setState(prev => ({ ...prev, shouldNotLoadMessages: true }));
+    if (count < +process.env.NEXT_PUBLIC_CHAT_MESSAGES_LIMIT) setState(prev => ({ ...prev, shouldNotLoadMessages: true }));
     setState(prev => ({ ...prev, loading: false }));
   };
 
@@ -40,7 +40,7 @@ const useMessageHandlers = (channelId: string) => {
       oldHeight = messagesEndRef.current!.scrollHeight - messagesEndRef.current!.scrollTop
     });
 
-    if (count < +process.env.CHAT_MESSAGES_LIMIT) setState(prev => ({ ...prev, shouldNotLoadMessages: true }));
+    if (count < +process.env.NEXT_PUBLIC_CHAT_MESSAGES_LIMIT) setState(prev => ({ ...prev, shouldNotLoadMessages: true }));
 
     messagesEndRef.current!.scrollTop = messagesEndRef.current!.scrollHeight - oldHeight!
 

@@ -19,7 +19,7 @@ async function proxyRequest(req: Request) {
 
   if (!query) return new Response(null, { status: 404 })
 
-  const url = `${process.env.API_ENDPOINT}${query}`;
+  const url = `${process.env.NEXT_PUBLIC_API_ENDPOINT}${query}`;
 
   const response = await fetch(url, {
     method: req.method,

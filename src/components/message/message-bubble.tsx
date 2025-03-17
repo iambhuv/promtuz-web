@@ -93,7 +93,7 @@ const MessageContent = ({ message, sent, className, shouldShowAuthor, shouldShow
           {message.attachments.map(attachment => {
             const file_extension = attachment.file_name ? attachment.file_name.split(".").at(-1) : "";
 
-            const file_url = `${process.env.API_ENDPOINT}/attachments/${message.channel_id}/${message.id}/${attachment.id}` + (file_extension ? `.${file_extension}` : '');
+            const file_url = `${process.env.NEXT_PUBLIC_API_ENDPOINT}/attachments/${message.channel_id}/${message.id}/${attachment.id}` + (file_extension ? `.${file_extension}` : '');
 
             // return attachment.file_name 
             return <img key={attachment.id} src={file_url} className="max-w-60 w-full pt-px rounded-t-md" />

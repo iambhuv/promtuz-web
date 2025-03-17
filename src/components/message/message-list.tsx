@@ -63,7 +63,7 @@ export const MessageList = memo(forwardRef<HTMLDivElement, { messageList: Messag
 
         {messages.map((msg, msg_ind) => {
           const index = messageTillNow + msg_ind
-          return <MessageBubble channel_type={channel.type} message={msg} key={msg.id} nextMessage={messages[msg_ind + 1]} previousMessage={messages[msg_ind - 1]} ref={msg_ind == +process.env.LOAD_MORE_THRESHOLD ? loadMoreRef : undefined} />
+          return <MessageBubble channel_type={channel.type} message={msg} key={msg.id} nextMessage={messages[msg_ind + 1]} previousMessage={messages[msg_ind - 1]} ref={msg_ind == +process.env.NEXT_PUBLIC_LOAD_MORE_THRESHOLD ? loadMoreRef : undefined} />
         })}
       </div>
     })
