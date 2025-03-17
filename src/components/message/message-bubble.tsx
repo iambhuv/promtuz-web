@@ -27,7 +27,7 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
   const sent = me.id == author.id
   const shouldShowTime = shouldMessageShowTime({ message, nextMessage });
 
-  const shouldShowAuthor = message.author_id !== previousMessage?.author_id;
+  const shouldShowAuthor = channel_type == ChannelType.GROUP_CHAT && message.author_id !== previousMessage?.author_id;
 
   return <MessageContextMenu onDoubleClick={() => {
     setInputState(message.channel_id, {
