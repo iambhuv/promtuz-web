@@ -78,6 +78,17 @@ export const shouldMessageShowTime = ({ message, nextMessage }: MessageBubblePro
     currentTimestamp.getMinutes() !== nextTimestamp.getMinutes()
 }
 
+export const shouldMessageShowAuthor = ({ message, previousMessage }: MessageBubbleProps): boolean => {
+  const isSameAuthor = previousMessage && previousMessage.author_id === message.author_id;
+  const currentTimestamp = new Date(message.created_at);
+  const previousTimestamp = previousMessage ? new Date(previousMessage.created_at) : null;
+
+  return !previousTimestamp ||
+    !isSameAuthor ||
+    currentTimestamp.getHours() !== previousTimestamp.getHours() ||
+    currentTimestamp.getMinutes() !== previousTimestamp.getMinutes()
+}
+
 export const shouldMessageMemo = (p1: MessageBubbleProps, p2: MessageBubbleProps) => {
   // console.log(p1, p2);
 

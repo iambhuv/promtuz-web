@@ -56,8 +56,6 @@ export const MessageList = memo(forwardRef<HTMLDivElement, { messageList: Messag
     }
   }, [messageList])
 
-  console.log(groupedMessages);
-  
   return (
     groupedMessages.map(({ day, displayDate, messages, messageTillNow }) => {
       return <div className="time-group relative" data-time={day} key={day}>

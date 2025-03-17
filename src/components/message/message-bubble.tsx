@@ -1,5 +1,5 @@
 import { useAPI } from "@/hooks/useAPI";
-import { cn, parseMessageDate, shouldMessageMemo, shouldMessageShowTime } from "@/lib/utils";
+import { cn, parseMessageDate, shouldMessageMemo, shouldMessageShowAuthor, shouldMessageShowTime } from "@/lib/utils";
 import { useStore } from "@/store";
 import { useChatStore } from "@/store/chat";
 import { Message, User } from "@/store/store";
@@ -27,7 +27,7 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
   const sent = me.id == author.id
   const shouldShowTime = shouldMessageShowTime({ message, nextMessage });
 
-  const shouldShowAuthor = message.author_id !== previousMessage?.author_id;
+  const shouldShowAuthor = shouldMessageShowAuthor({ message, previousMessage });
 
   return <MessageContextMenu onDoubleClick={() => {
     setInputState(message.channel_id, {
@@ -35,17 +35,15 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
     })
   }} message={message}>
     <motion.div
-      layout="position"
       className={cn(sent ?
         "self-end message sent data-[state=open]: text-primary-foreground" :
         "self-start message received text-sidebar-accent-foreground whitespace-pre-wrap",
-        "rounded-lg w-fit h-fit my-[1px] leading-[1.315]", shouldShowTime && 'mb-[2px]')}
+        "rounded-lg w-fit h-fit my-[1px] leading-[1.315]", shouldShowTime && 'mb-[2px]', shouldShowAuthor && 'mt-0.5')}
       data-message-id={message.id}
       data-created-at={message.created_at}
       ref={loadMoreRef}
     >
-      {/* {channel_type == ChannelType.GROUP_CHAT && shouldShowAuthor ? <span>{author.display_name}</span> : null} */}
-      <MessageContent message={message} sent={sent} shouldShowAuthor={shouldShowAuthor} />
+      <MessageContent message={message} sent={sent} shouldShowTime={shouldShowTime} shouldShowAuthor={shouldShowAuthor} />
     </motion.div>
   </MessageContextMenu>
 }), shouldMessageMemo)
@@ -72,7 +70,7 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
 
   return (
     <div className={cn("pt-[0.25rem] px-1 rounded-t-lg", sent ? 'bg-(--message-bubble-sent)' : "bg-(--message-bubble-recv)")}>
-      <div className={cn("py-[0.1rem] px-2 cursor-pointer rounded-md", sent ? "bg-(--message-bubble-sent-reply)" : 'bg-(--message-bubble-recv-reply)')} onClick={scrollToMessage}>
+      <div className={cn("py-[0.1rem] px-2 cursor-pointer rounded-sm", sent ? "bg-(--message-bubble-sent-reply)" : 'bg-(--message-bubble-recv-reply)')} onClick={scrollToMessage}>
         <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={reply_user} /></span>
         <MessageTextContent content={reply.content} className="block mb-1 text-ellipsis overflow-hidden whitespace-nowrap" />
       </div>
@@ -80,7 +78,7 @@ export const MessageContentReply = ({ message, sent }: { message: Message, sent:
   )
 }
 
-const MessageContent = ({ message, sent, className, shouldShowAuthor }: { message: Message, sent: boolean, shouldShowAuthor: boolean } & React.HTMLProps<HTMLDivElement>) => {
+const MessageContent = ({ message, sent, className, shouldShowAuthor, shouldShowTime }: { message: Message, sent: boolean, shouldShowAuthor: boolean, shouldShowTime: boolean } & React.HTMLProps<HTMLDivElement>) => {
   const reply = message.reply_to;
   const author = useStore(store => store.users.get(message.author_id));
 
@@ -88,7 +86,7 @@ const MessageContent = ({ message, sent, className, shouldShowAuthor }: { messag
 
   return (
     <>
-      <div className={cn(reply && "p-[.15rem]", className)}>
+      <div className={cn(reply && "p-[.15rem]", "relative", className)}>
         {reply && <MessageContentReply message={message} sent={sent} />}
 
         <div className="flex flex-col">
@@ -98,11 +96,11 @@ const MessageContent = ({ message, sent, className, shouldShowAuthor }: { messag
             const file_url = `${process.env.API_ENDPOINT}/attachments/${message.channel_id}/${message.id}/${attachment.id}` + (file_extension ? `.${file_extension}` : '');
 
             // return attachment.file_name 
-            return <img key={attachment.id} src={file_url} className="max-w-60 w-full pt-px rounded-t-lg" />
+            return <img key={attachment.id} src={file_url} className="max-w-60 w-full pt-px rounded-t-md" />
           })}
         </div>
 
-        {!is_empty_content ? <div className={cn("py-[0.2rem] rounded-b-lg", !message.attachments.length && !reply && 'rounded-t-lg', sent ? "bg-(--message-bubble-sent)" : "bg-(--message-bubble-recv)", reply ? "px-1.5" : "px-2")}>
+        {!is_empty_content ? <div className={cn("py-[0.2rem] rounded-b-md", !message.attachments.length && !reply && 'rounded-t-md', sent ? "bg-(--message-bubble-sent)" : "bg-(--message-bubble-recv)", reply ? "px-1.5" : "px-2", shouldShowTime && (sent ? "rounded-br-none" : "rounded-bl-none"))}>
           {shouldShowAuthor && <span className="text-[.65rem] font-medium block mt-1 text-foreground"><MessageAuthor author={author} /></span>}
           <MessageTextContent content={message.content} />
 
@@ -115,6 +113,15 @@ const MessageContent = ({ message, sent, className, shouldShowAuthor }: { messag
           <span className={cn('text-[12px]/[1] opacity-75 select-none text-nowrap visible absolute')}>{parseMessageDate(message.created_at)}</span>
         </span>}
 
+        {shouldShowTime && <svg width="9" height="20" className={cn("absolute bottom-0 translate-y-[3px]", sent ? "text-(--message-bubble-sent) left-full" : "text-(--message-bubble-recv) right-full")}>
+          <g fill="none" fillRule="evenodd">
+            {
+              sent ?
+                <path d="M6 17H0V0c.193 2.84.876 5.767 2.05 8.782.904 2.325 2.446 4.485 4.625 6.48A1 1 0 016 17z" fill="currentColor" className="corner"></path> :
+                <path d="M3 17h6V0c-.193 2.84-.876 5.767-2.05 8.782-.904 2.325-2.446 4.485-4.625 6.48A1 1 0 003 17z" fill="currentColor" className="corner"></path>
+            }
+          </g>
+        </svg>}
       </div>
     </>
   )
