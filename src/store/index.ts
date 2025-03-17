@@ -67,8 +67,8 @@ export const createStore = (initProps: Partial<DataStore>) => {
       if (get().ws && (get().ws?.readyState === 1)) return;
 
       set({ connectionStatus: tries > 1 ? "RETRYING" : "CONNECTING" });
-
-      const ws = new WebSocket(new URL("/ws", process.env.API_ENDPOINT?.replace('http', 'ws')))
+      
+      const ws = new WebSocket(new URL("/ws", process.env.NEXT_PUBLIC_API_ENDPOINT?.replace('http', 'ws')))
       ws.binaryType = "arraybuffer"
 
       ws.onopen = (wse) => {
