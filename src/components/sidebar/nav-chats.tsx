@@ -1,7 +1,7 @@
 import { cn, createFallbackAvatar } from '@/lib/utils'
 import { useStore } from '@/store'
 import { useChatStore } from '@/store/chat'
-import { Channel, User, UserID } from '@/store/store'
+import { Channel, User, UserID } from '@/types/store'
 import Link from 'next/link'
 import React, { memo, useCallback, useMemo } from 'react'
 import { serializeToString } from '../chat/chat-input'
@@ -46,7 +46,7 @@ const NavChats = () => {
             <path d="M181.224 113.406C181.898 110.808 181.551 108.471 180.449 108.185C179.346 107.899 177.907 109.774 177.233 112.371C176.56 114.969 176.907 117.307 178.009 117.593C179.111 117.878 180.551 116.004 181.224 113.406Z" fill="black" />
             <path d="M169.357 122.945C169.197 122.944 169.042 122.89 168.918 122.789C168.794 122.689 168.708 122.549 168.674 122.393C168.549 121.828 167.994 120.156 167.113 119.908C166.233 119.659 164.506 120.624 163.807 121.13C163.657 121.239 163.47 121.284 163.286 121.254C163.103 121.225 162.939 121.124 162.83 120.974C162.721 120.823 162.676 120.636 162.706 120.453C162.735 120.269 162.836 120.105 162.986 119.996C163.262 119.797 165.728 118.062 167.493 118.56C169.335 119.08 169.975 121.788 170.041 122.095C170.064 122.198 170.063 122.304 170.039 122.406C170.015 122.507 169.968 122.603 169.902 122.684C169.837 122.765 169.754 122.831 169.659 122.876C169.565 122.921 169.461 122.945 169.357 122.945H169.357Z" fill="black" />
           </svg>
-          <span className='text-primary-foreground/65'>Make some friends Bro</span>
+          <span className='text-primary-foreground/65'>Make some friends bruh</span>
         </div> : ''}
         {channel_list.map((channel) => {
           return <SidebarMenuItem key={channel.id}>
@@ -136,12 +136,18 @@ const NavDMChat = memo(({ channel }: { channel: Channel }) => {
 })
 
 const NavGroupChat = memo(({ channel }: { channel: Channel }) => {
+  const my_user_id = useStore(store => store.me.id);
+
   const latest_last_message = useStore(store => store.messages?.[channel.id]?.[Object.keys(store.messages[channel.id])[0]!]);
-  const last_message = latest_last_message || channel.last_message;
 
   const activeChannel = useStore(store => store.activeChannel)
 
   const draft = serializeToString(useChatStore(state => state.getInputContent(channel.id)));
+
+  const last_message = latest_last_message || channel.last_message;
+
+  const last_message_author = useStore(store => store.users.get(last_message?.author_id))
+
 
   return <ContextMenu modal={false}>
     <ContextMenuTrigger asChild>
@@ -168,8 +174,17 @@ const NavGroupChat = memo(({ channel }: { channel: Channel }) => {
               {
                 draft && activeChannel !== channel.id ?
                   <span><strong>DRAFT:</strong> {draft}</span>
-                  : last_message?.content || ((last_message && !last_message?.content)
-                    ? <i>Sent an Attachment</i> : '')}
+                  :
+                  <span>
+                    {last_message && last_message_author && <strong>{last_message.author_id === my_user_id ? "You" : last_message_author.display_name}: </strong>}
+
+                    {
+                      last_message?.content ||
+                      ((last_message && !last_message?.content) ? <i>Sent an Attachment</i> : '')
+                    }
+                  </span>
+
+              }
             </span>
           </div>
         </Link>

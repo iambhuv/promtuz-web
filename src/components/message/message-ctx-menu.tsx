@@ -9,7 +9,7 @@ import {
   ContextMenuTrigger
 } from '@/components/ui/context-menu';
 import { Copy, Edit3, LucideIcon, Reply, Trash } from 'lucide-react';
-import type { Message } from '@/store/store';
+import type { Message } from '@/types/store';
 import { useStore } from '@/store';
 import { useToast } from '@/hooks/useToast';
 import { motion } from "framer-motion"

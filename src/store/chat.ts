@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { combine } from 'zustand/middleware';
-import { ChannelID, MessageID } from "./store";
+import { ChannelID, MessageID } from "../types/store";
 import { LocalAttachment } from "@/types";
 import { Descendant } from "slate";
 import { hashFile } from "@/lib/utils";

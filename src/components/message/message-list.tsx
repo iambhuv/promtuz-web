@@ -1,6 +1,6 @@
 import { parseMessageDate } from '@/lib/utils';
 import { useStore } from '@/store';
-import { Message } from '@/store/store';
+import { Message } from '@/types/store';
 import { forwardRef, memo, useEffect, useMemo } from 'react';
 import MessageBubble from './message-bubble';
 import MessageTime from './message-time';

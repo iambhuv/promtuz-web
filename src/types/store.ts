@@ -1,5 +1,5 @@
 import { APIResponse } from "@/lib/api";
-import { AttachmentType, ChannelType } from "./enums";
+import { AttachmentType, ChannelType } from "../store/enums";
 import { Attachment } from "@/types";
 
 export type Message = {

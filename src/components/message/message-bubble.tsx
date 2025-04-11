@@ -2,7 +2,7 @@ import { useAPI } from "@/hooks/useAPI";
 import { cn, parseMessageDate, shouldMessageMemo, shouldMessageShowAuthor, shouldMessageShowTime } from "@/lib/utils";
 import { useStore } from "@/store";
 import { useChatStore } from "@/store/chat";
-import { Message, User } from "@/store/store";
+import { Message, User } from "@/types/store";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { forwardRef, memo } from "react";
@@ -18,16 +18,21 @@ const MessageAuthor = memo(({ author }: { author?: User }) => {
 })
 
 const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ message, nextMessage, previousMessage, channel_type }, loadMoreRef) => {
-  const me = useStore(store => store.me)
+  // const me = useStore(store => store.me)
+  const my_id = useStore(store => store.me.id)
   const author = useStore(store => store.users.get(message.author_id));
   const setInputState = useChatStore(state => state.setInputState);
 
   if (!author) return <div className='italic'>Message without Author</div>;
 
-  const sent = me.id == author.id
+  const sent = my_id == author.id;
+
+
   const shouldShowTime = shouldMessageShowTime({ message, nextMessage });
 
-  const shouldShowAuthor = shouldMessageShowAuthor({ message, previousMessage });
+  const shouldDifferentiate = shouldMessageShowAuthor({ message, previousMessage });
+
+  const shouldShowAuthor = channel_type == "GROUP_CHAT" && !sent && shouldDifferentiate;
 
   return <MessageContextMenu onDoubleClick={() => {
     setInputState(message.channel_id, {
@@ -38,7 +43,7 @@ const MessageBubble = memo(forwardRef<HTMLDivElement, MessageBubbleProps>(({ mes
       className={cn(sent ?
         "self-end message sent data-[state=open]: text-primary-foreground" :
         "self-start message received text-sidebar-accent-foreground whitespace-pre-wrap",
-        "rounded-lg w-fit h-fit my-[1px] leading-[1.315]", shouldShowTime && 'mb-[2px]', shouldShowAuthor && 'mt-0.5')}
+        "rounded-lg w-fit h-fit my-[1px] leading-[1.315]", shouldShowTime && 'mb-[2px]', shouldDifferentiate && 'mt-0.5')}
       data-message-id={message.id}
       data-created-at={message.created_at}
       ref={loadMoreRef}
@@ -86,7 +91,7 @@ const MessageContent = ({ message, sent, className, shouldShowAuthor, shouldShow
 
   return (
     <>
-      <div className={cn(reply && "p-[.15rem]", "relative", className)}>
+     <div className={cn(reply && "", "relative", className)}>
         {reply && <MessageContentReply message={message} sent={sent} />}
 
         <div className="flex flex-col">

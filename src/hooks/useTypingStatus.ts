@@ -1,5 +1,5 @@
 import { useStore } from '@/store';
-import { ChannelID } from '@/store/store';
+import { ChannelID } from '@/types/store';
 import { useRef } from 'react';
 
 const useTypingStatus = (channel: ChannelID) => {

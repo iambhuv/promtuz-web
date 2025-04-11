@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { SidebarTrigger } from '../ui/sidebar'
 import { Separator } from '../ui/separator'
-import { Channel, User, UserID } from '@/store/store'
+import { Channel, User, UserID } from '@/types/store'
 import { useStore } from '@/store'
 import { beautifyLastSeen, createFallbackAvatar } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '../ui/avatar'

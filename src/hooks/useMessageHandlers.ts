@@ -3,14 +3,17 @@ import { useStore } from "@/store";
 import { useChatStore } from "@/store/chat";
 import { MessagePayload } from "@/types/payloads";
 import Pako from "pako";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const useMessageHandlers = (channelId: string) => {
   const loadMessages = useStore(store => store.loadMessages);
 
   const getInputAttachments = useChatStore(state => state.getInputAttachments);
   const removeInputState = useChatStore(state => state.removeInputState);
-  const inputState = useChatStore(state => state.inputs[channelId]);
+  const inputStates = useChatStore(state => state.inputs);
+  
+  const inputState = useMemo(() => inputStates[channelId], [inputStates])
+
 
   const [state, setState] = useState({
     loading: false,

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { ChatStatus } from '@/store/store'
+import { ChatStatus } from '@/types/store'
 import React from 'react'
 import { Skeleton } from '../ui/skeleton'
 

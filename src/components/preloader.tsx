@@ -1,7 +1,7 @@
 import React from 'react'
 import { PromtuzLogo } from './logo'
 import { useStore } from '@/store'
-import { ConnectionStatus } from '@/store/store'
+import { ConnectionStatus } from '@/types/store'
 
 const Preloader = () => {
   const status = useStore(store => store.connectionStatus)

@@ -3,10 +3,12 @@ import { toQueryString } from '@/lib/utils';
 import pako from "pako";
 import { createContext, useContext } from 'react';
 import { useStore as _useStore, create, StoreApi } from 'zustand';
-import { Channel, ChatStatus, DataStore, Message, MeUser, Presence, RelationID, Relationship, User, UserID } from './store';
+import { Channel, ChatStatus, DataStore, Message, MeUser, Presence, RelationID, Relationship, User, UserID } from '../types/store';
 
 import { immer } from 'zustand/middleware/immer';
 import { enableMapSet } from 'immer';
+import { eventHandlers } from '@/lib/ws-handler';
+import { WebSocketEventMap } from '@/types/events';
 
 enableMapSet();
 
@@ -67,7 +69,7 @@ export const createStore = (initProps: Partial<DataStore>) => {
       if (get().ws && (get().ws?.readyState === 1)) return;
 
       set({ connectionStatus: tries > 1 ? "RETRYING" : "CONNECTING" });
-      
+
       const ws = new WebSocket(new URL("/ws", process.env.NEXT_PUBLIC_API_ENDPOINT?.replace('http', 'ws')))
       ws.binaryType = "arraybuffer"
 
@@ -84,114 +86,20 @@ export const createStore = (initProps: Partial<DataStore>) => {
       }
 
       ws.onmessage = (ev: MessageEvent) => {
-        const { type, data } = JSON.parse(deflatePayload(ev.data));
+        const parsed = JSON.parse(deflatePayload(ev.data)) as {
+          [K in keyof WebSocketEventMap]: { type: K; data: WebSocketEventMap[K] };
+        }[keyof WebSocketEventMap];
 
-        if (data) console.info(`[${type}]:`, data);
+        const { type, data } = parsed;
 
-        if (type == "PONG") { }
-        else if (type == "ME") {
-          // Reset Tries
-          tries = 0
+        console.info(`[${type}]:`, data);
 
-          const init = data;
+        const handler = eventHandlers[type];
 
-          set({
-            me: init.me,
-            relationships: new Map(Object.entries(init.relationships)),
-            users: new Map(Object.entries(Object.assign(init.users, { [init.me.id]: init.me }))),
-            presence: new Map(Object.entries(init.presence)),
-            channels: new Map(Object.entries(init.channels)),
-            loaded: true
-          })
-        } else if (type == "MESSAGE_CREATE") {
-          const msg = data;
-          const channel_id = msg.channel_id;
-
-          set({
-            messages: {
-              ...(get().messages || {}),
-              [channel_id]: {
-                [msg.id]: msg,
-                ...(get().messages[channel_id] || {})
-              }
-            }
-          })
-
-          set((state) => {
-            if (!state.channels.has(channel_id)) return;
-
-            const channels = new Map(state.channels);
-            const channel = channels.get(channel_id)!;
-
-            channels.set(channel_id, {
-              ...channel,
-              unread_message_count: get().me.id === msg.author_id ? 0 : (channel.unread_message_count ?? 0) + 1,
-            });
-
-            return { channels };
-          });
-        } else if (type == "CHAT_STATUS") {
-          const status = data as ChatStatus;
-          set(({ chat_status }) => ({
-            chat_status: {
-              ...chat_status,
-              [status.channel_id]: {
-                ...(chat_status[status.channel_id] || {}),
-                [status.user_id]: status.status
-              }
-            }
-          }))
-        } else if (type == "CHANNEL_CREATE") {
-          const channel = data as Channel;
-
-          set(({ channels }) => ({
-            channels: {
-              [channel.id]: channel,
-              ...channels,
-            }
-          }))
-        } else if (type == "RELATIONSHIP_CREATE") {
-          const relation = data as Relationship;
-
-          // Check and load user
-
-          if (!get().users.get(relation.user_id)) get().loadUser(relation.user_id)
-
-          set(({ relationships }) => ({
-            relationships: new Map(relationships).set(relation.id, relation)
-          }))
-        } else if (type == "RELATIONSHIP_DELETE") {
-          const relation_id = data?.id;
-
-          set(({ relationships }) => {
-            const updated_relations = new Map(relationships);
-            updated_relations.delete(relation_id);
-
-            return ({
-              relationships: updated_relations
-            })
-          })
-        } else if (type == "RELATIONSHIP_UPDATE") {
-          const relation = data as { id: RelationID } & Partial<Omit<Relationship, 'id'>>;
-
-          set(({ relationships }) => {
-            const updated_relations = new Map(relationships);
-            const current_relationship = updated_relations.get(relation.id);
-
-            if (!current_relationship) return {};
-
-            updated_relations.set(relation.id, { ...current_relationship, ...relation });
-
-            return ({
-              relationships: updated_relations
-            })
-          })
-        } else if (type == "PRESENCE_UPDATE") {
-          const { id, ...presence } = data as { id: UserID } & Presence;
-
-          set(({ presence: presences }) => ({
-            presence: new Map(presences).set(id, presence)
-          }))
+        if (handler) {
+          handler(get, set, <any>data);
+        } else {
+          console.error(`Cannot Find Event Handler for Event: [${type}]`);
         }
       }
 

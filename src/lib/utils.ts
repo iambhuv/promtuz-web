@@ -1,4 +1,4 @@
-import { Message } from "@/store/store"
+import { Message } from "@/types/store"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge";
 import moment from "moment";

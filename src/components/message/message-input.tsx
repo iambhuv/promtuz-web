@@ -1,7 +1,7 @@
 import useAttachments from '@/hooks/attachments/useAttachments';
 import useTypingStatus from '@/hooks/useTypingStatus';
 import { useChatStore } from '@/store/chat';
-import { Channel } from '@/store/store';
+import { Channel } from '@/types/store';
 import { PasteEvent } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { File, FileAudio, FileImage, FileVideo2, Paperclip, SendHorizonal } from 'lucide-react';

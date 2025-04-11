@@ -1,5 +1,5 @@
 import { cn, parseMessageDate } from '@/lib/utils'
-import { Message } from '@/store/store'
+import { Message } from '@/types/store'
 import React, { useEffect, useRef } from 'react'
 import { useInView } from 'react-intersection-observer'
 

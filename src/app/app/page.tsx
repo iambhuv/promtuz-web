@@ -15,9 +15,8 @@ export default function App() {
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0 items-center justify-center">
-        <h1 className="text-3xl font-semibold">Very Empty App?</h1>
+        <h1 className="text-3xl font-semibold">Quite Lonely?</h1>
         <h2 className="text-2xl font-semibold">Select any friend to chat!</h2>
-        <h3><i>PS! Remove me 😉🤌🏻</i></h3>
       </div>
     </>
   )

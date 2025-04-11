@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/useToast";
 import { handleRequest } from "@/lib/api";
 import { cn, createFallbackAvatar } from "@/lib/utils";
 import { useStore } from "@/store";
-import type { RelationID, Relationship } from "@/store/store";
+import type { RelationID, Relationship } from "@/types/store";
 import { Check, LucideEllipsisVertical, UserRoundSearch, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
