@@ -8,6 +8,8 @@ export const initHandlers: HandlerGroup = {
       users: new Map(Object.entries(Object.assign(data.users, { [data.me.id]: data.me }))),
       presence: new Map(Object.entries(data.presence)),
       channels: new Map(Object.entries(data.channels)),
+      session: data.session,
+      push_token: data.push_token,
       loaded: true
     })
   },

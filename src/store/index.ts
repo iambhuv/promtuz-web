@@ -50,6 +50,7 @@ export const createStore = (initProps: Partial<DataStore>) => {
     presence: new Map(),
 
     activeChannel: "",
+    session: "",
 
     chat_status: {},
     ...initProps,

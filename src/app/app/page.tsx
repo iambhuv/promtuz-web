@@ -4,6 +4,8 @@ import { Separator } from "@/components/ui/separator";
 import {
   SidebarTrigger
 } from "@/components/ui/sidebar";
+// Import the functions you need from the SDKs you need
+
 
 export default function App() {
   return (

@@ -1,5 +1,6 @@
 // "use client";
 
+import Notifications from "@/components/notification";
 import NotitificationCounter from "@/components/notification-counter";
 import { AppSidebar, RightSidebar } from "@/components/sidebar/app-sidebar";
 import StoreLoader from "@/components/store-loader";
@@ -20,6 +21,7 @@ export default async function AppLayout({
 
   return <StoreLoader token={cookie.get("token")?.value}>
     <SidebarProvider>
+      <Notifications />
       <NotitificationCounter />
       <AppSidebar />
       <SidebarInset>

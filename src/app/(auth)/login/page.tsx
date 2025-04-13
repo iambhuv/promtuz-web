@@ -22,7 +22,7 @@ const Login = () => {
     try {
       const { username, password } = Object.fromEntries(formData.entries());
 
-      const { data, err } = await handleRequest<{ token: string }>("POST", `/login`, jsonBytes({
+      const { data, err } = await handleRequest<{ token: string }>("POST", `/auth/login`, jsonBytes({
         username, password, cookie: true
       }));
 

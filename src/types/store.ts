@@ -78,6 +78,9 @@ export type StoreState = {
   presence: Map<UserID, Presence>
   messages: Record<ChannelID, Record<MessageID, Message>>;
 
+  session: string;
+  push_token?: string;
+
   connectionStatus: ConnectionStatus;
 
   chat_status: Record<ChannelID, Record<UserID, ChatStatus['status']>>

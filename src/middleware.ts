@@ -1,11 +1,10 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import jwt from "jsonwebtoken";
+import { type NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
   const pathname = request.nextUrl.pathname
 
-  const data = jwt.decode(token || '')
+  // const data = jwt.decode(token || '')
 
   // if (!data || typeof data !== 'string' && data.exp! * 1000 < Date.now()) {
   //   const login_response = NextResponse.redirect(new URL('/login', request.url))
@@ -13,15 +12,18 @@ export function middleware(request: NextRequest) {
 
   //   return login_response
   // }
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register');
+  const isHome = pathname === '/';
 
-
-  if (!token && !pathname.startsWith('/login') && !pathname.startsWith("/register")) {
-    return Response.redirect(new URL(`/login?redirect_path=${encodeURIComponent(pathname)}`, request.url))
+  if (!isAuthPage) {
+    if (!token) return Response.redirect(new URL(`/login?redirect_path=${encodeURIComponent(pathname)}`, request.url));
+    if (isHome && token) return Response.redirect(new URL('/app', request.url));
   }
 
-  if (token && (pathname.startsWith('/login') || pathname.startsWith("/register"))) {
-    return Response.redirect(new URL('/', request.url))
+  if (token && isAuthPage) {
+    return Response.redirect(new URL('/app', request.url));
   }
+
 }
 
 export const config = {

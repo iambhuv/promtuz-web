@@ -16,6 +16,8 @@ export type WebSocketEventMap = {
     users: Record<string, User>;
     presence: Record<string, Presence>;
     channels: Record<string, Channel>;
+    session: string;
+    push_token?: string;
   };
 
   MESSAGE_CREATE: Message;
