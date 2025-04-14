@@ -32,6 +32,8 @@ const Notifications = () => {
 
   const requestNotification = async () => {
     try {
+      sw.current?.update();
+
       const perm = await Notification.requestPermission();
 
       if (perm == 'granted') {
@@ -53,11 +55,12 @@ const Notifications = () => {
     navigator.serviceWorker.register("/push.js").then(reg => {
       sw.current = reg
     });
+
     requestNotification();
+
     onMessage(messaging, (msg) => {
       sw.current?.active?.postMessage({
         type: "SHOW_NOTIFICATION",
-        notification: msg.notification,
         data: msg.data,
       });
     })
