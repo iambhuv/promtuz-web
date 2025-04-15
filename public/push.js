@@ -13,33 +13,33 @@ firebase.initializeApp({
 // Necessary to receive background messages:
 const messaging = firebase.messaging();
 
+const handleNotification = (data) => {
+  /**
+   * @type {ServiceWorkerRegistration}
+   */
+  const reg = self.registration;
+
+  if (data.type == "MESSAGE_CREATE") {
+    reg.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon ?? "https://scsservice.cloud/assets/logo.png",
+      image: data.image,
+      lang: 'en',
+      badge: "https://scsservice.cloud/assets/badge.png",
+      tag: data.chat_id,
+      renotify: true,
+      timestamp: data.timestamp,
+      vibrate: [30, 20, 30],
+      actions: data.actions,
+
+      data: data,
+    });
+  }
+}
 
 self.addEventListener("message", (event) => {
-  if (event.data?.type === "SHOW_NOTIFICATION") {
-    /**
-     * @type {ServiceWorkerRegistration}
-     */
-    const reg = self.registration;
-
-    const notification = event.data.notification;
-    const data = event.data.data;
-
-    if (data.type == "MESSAGE_CREATE") {
-      reg.showNotification(notification.title, {
-        body: notification.body,
-        icon: data.icon ?? "/assets/logo.png",
-        image: data.image,
-        lang: 'en',
-        badge: "/assets/badge.png",
-        tag: data.chat_id,
-        renotify: true,
-        timestamp: data.timestamp,
-        vibrate: [30, 20, 30],
-        actions: data.actions,
-
-        data: data,
-      });
-    }
+  if (event.type === "SHOW_NOTIFICATION") {
+    handleNotification(event.data)
   }
 });
 
@@ -49,7 +49,7 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   if (data.type == "MESSAGE_CREATE") {
-    let url = `/app/chats/${data.chat_id}`;
+    let url = `https://scsservice.cloud/app/chats/${data.chat_id}`;
 
     event.waitUntil(
       clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
@@ -65,6 +65,11 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 // Optional:
-messaging.onBackgroundMessage((m) => {
-  console.log("onBackgroundMessage", m);
+messaging.onBackgroundMessage((payload) => {
+  const data = payload.data;
+  if (!data) return;
+  handleNotification(data);
 });
+
+self.addEventListener("install", (e) => self.skipWaiting());
+self.addEventListener("activate", (e) => self.clients.claim());
