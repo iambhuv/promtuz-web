@@ -1,8 +1,7 @@
-import { Message } from "@/types/store"
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge";
-import moment from "moment";
+import { Message } from "@/types/store";
+import { clsx, type ClassValue } from "clsx";
 import Pako from "pako";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -132,9 +131,19 @@ export function beautifyLastSeen(date: string | number | Date) {
 
 
 export function jsonBytes(payload: Record<string, any>) {
-  // const formData = new FormData();
-
-  // formData.set('json_payload', )
-
   return new Blob([Pako.deflate(Buffer.from(JSON.stringify(payload)))]);
+}
+
+export function playSound(soundObj?: { blob: string }) {
+  if (document && soundObj) {
+    const audio = document.createElement("audio");
+    audio.hidden = true;
+    audio.pause();
+    audio.src = soundObj.blob;
+    document.body.append(audio);
+    audio.play()
+      .then(() => {
+        audio.addEventListener('ended', audio.remove)
+      })
+  }
 }

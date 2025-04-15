@@ -1,9 +1,9 @@
 
 "use client";
 import { useStore } from '@/store';
-import React, { useEffect, useRef } from 'react'
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { useEffect, useState } from 'react';
 // TODO: Add SDKs for Firebase products that you want to use
 
 const firebaseConfig = {
@@ -27,45 +27,45 @@ const Notifications = () => {
   const push_token = useStore((store) => store.pushToken);
   const ws_emit = useStore((store) => store.emit);
 
-  const sw = useRef<ServiceWorkerRegistration>(null)
+  const [swr, setSwr] = useState<ServiceWorkerRegistration>();
+  // const [gotToken, setGotToken] = useState(false);
 
 
   const requestNotification = async () => {
     try {
-      sw.current?.update();
-
       const perm = await Notification.requestPermission();
 
       if (perm == 'granted') {
-        const token = await getToken(messaging, { serviceWorkerRegistration: sw.current!, vapidKey: process.env.NEXT_PUBLIC_VAPID_PUB_KEY });
-        console.log({ token });
+        const token = await getToken(messaging, { serviceWorkerRegistration: swr, vapidKey: process.env.NEXT_PUBLIC_VAPID_PUB_KEY });
+
+        console.info("Got Token", { token })
 
         if (token !== push_token) {
           ws_emit("PUSH_TOKEN", { token })
         }
-
       }
-
-    } catch (err) {
-      console.log(err);
-    }
+    } catch { }
   }
 
   useEffect(() => {
     navigator.serviceWorker.register("/push.js").then(reg => {
-      sw.current = reg
+      setSwr(reg)
     });
+  })
 
+  useEffect(() => {
     requestNotification();
-
-    onMessage(messaging, (msg) => {
-      sw.current?.active?.postMessage({
+    const offMessage = onMessage(messaging, (msg) => {
+      swr?.active?.postMessage({
         type: "SHOW_NOTIFICATION",
-        data: msg.data,
+        data: msg,
       });
     })
 
-  })
+    return () => {
+      offMessage();
+    }
+  }, [swr])
 
   return null;
 }

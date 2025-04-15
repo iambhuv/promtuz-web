@@ -19,56 +19,44 @@ const handleNotification = (data) => {
    */
   const reg = self.registration;
 
-  if (data.type == "MESSAGE_CREATE") {
-    reg.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon ?? "https://scsservice.cloud/assets/logo.png",
-      image: data.image,
-      lang: 'en',
-      badge: "https://scsservice.cloud/assets/badge.png",
-      tag: data.chat_id,
-      renotify: true,
-      timestamp: data.timestamp,
-      vibrate: [30, 20, 30],
-      actions: data.actions,
-
-      data: data,
-    });
-  }
+  reg.showNotification(data.title, {
+    ...data,
+    actions: JSON.parse(data.actions ?? "[]"),
+    vibrate: JSON.parse(data.vibrate ?? "[]"),
+    data
+  })
 }
 
 self.addEventListener("message", (event) => {
   if (event.type === "SHOW_NOTIFICATION") {
-    handleNotification(event.data)
+    handleNotification(event.data.data)
   }
 });
 
 
 self.addEventListener("notificationclick", (event) => {
-  const data = event.notification.data;
-  event.notification.close();
+  console.log(event);
+  
+  const url = event.notification.data?.url;
+  event.notification.close()
 
-  if (data.type == "MESSAGE_CREATE") {
-    let url = `https://scsservice.cloud/app/chats/${data.chat_id}`;
+  if (!url) return;
 
-    event.waitUntil(
-      clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-        for (const client of clientList) {
-          if (client.url.includes(url) && "focus" in client) {
-            return client.focus();
-          }
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && "focus" in client) {
+          return client.focus();
         }
-        return clients.openWindow(url);
-      })
-    );
-  }
+      }
+      return clients.openWindow(url);
+    })
+  );
 });
 
 // Optional:
 messaging.onBackgroundMessage((payload) => {
-  const data = payload.data;
-  if (!data) return;
-  handleNotification(data);
+  handleNotification(payload.data);
 });
 
 self.addEventListener("install", (e) => self.skipWaiting());

@@ -9,6 +9,7 @@ import { immer } from 'zustand/middleware/immer';
 import { enableMapSet } from 'immer';
 import { eventHandlers } from '@/lib/ws-handler';
 import { WebSocketEventMap } from '@/types/events';
+import { loadSounds } from '@/lib/load-sounds';
 
 enableMapSet();
 
@@ -51,6 +52,8 @@ export const createStore = (initProps: Partial<DataStore>) => {
     session: "",
 
     chatStatus: {},
+    sounds: new Map(),
+
     ...initProps,
 
     async loadUser(id: string) {
@@ -65,6 +68,8 @@ export const createStore = (initProps: Partial<DataStore>) => {
     },
 
     async initConnection(tries: number = 1) {
+      if (!get().sounds.size) loadSounds(store);
+
       if (get().ws && (get().ws?.readyState === 1)) return;
 
       set({ connectionStatus: tries > 1 ? "RETRYING" : "CONNECTING" });
@@ -195,16 +200,15 @@ export const createStore = (initProps: Partial<DataStore>) => {
         activeChannel: channel_id
       }))
     },
-  })));
-
-  return store
+  })))
 }
-
 export const StoreContext = createContext<Store | null>(null);
+
 
 
 export function useStore<T>(selector: (state: DataStore) => T): T {
   const store = useContext(StoreContext)
+
   if (!store) throw new Error('Missing StoreContext.Provider in the tree')
   return _useStore(store, selector)
 }

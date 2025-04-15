@@ -1,8 +1,16 @@
+import { useStore } from '@/store';
 import type { HandlerGroup } from '@/types/events';
+import { playSound } from '../utils';
 
 export const messageHandlers: HandlerGroup = {
   MESSAGE_CREATE(get, set, message) {
     const channel_id = message.channel_id;
+    const me = get().me.id;
+    const activeChannel = get().activeChannel;
+
+    const playAudio = message.author_id !== me || !(document.hasFocus() && channel_id == activeChannel);
+
+    if (playAudio) playSound(get().sounds.get("notification"));
 
     set({
       messages: {

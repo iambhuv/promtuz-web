@@ -86,6 +86,8 @@ export type StoreState = {
   chatStatus: Record<ChannelID, Record<UserID, ChatStatus['status']>>
 
   activeChannel: ChannelID,
+
+  sounds: Map<string, { blob: string }>
 }
 
 // TODO: 
