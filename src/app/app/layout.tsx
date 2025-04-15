@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export default async function AppLayout({
   children,
@@ -18,9 +18,10 @@ export default async function AppLayout({
   children: React.ReactNode;
 }>) {
   const cookie = await cookies();
+  const pathname = (await headers()).get('x-pathname')!
 
   return <StoreLoader token={cookie.get("token")?.value}>
-    <SidebarProvider>
+    <SidebarProvider defaultMobile={pathname == "/app"}>
       <Notifications />
       <NotitificationCounter />
       <AppSidebar />

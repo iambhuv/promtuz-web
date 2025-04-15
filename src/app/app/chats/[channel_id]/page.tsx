@@ -28,7 +28,7 @@ const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchP
 
 
   // FIXME: imple for gc support
-  // const chatStatus = useStore(store => store.chat_status?.[channel.id]?.[user.id]);
+  // const chatStatus = useStore(store => store.chatStatus?.[channel.id]?.[user.id]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { ref: loadMoreRef, inView } = useInView({ threshold: 0, initialInView: false });

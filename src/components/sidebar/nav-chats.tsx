@@ -3,12 +3,15 @@ import { useStore } from '@/store'
 import { useChatStore } from '@/store/chat'
 import { Channel, User, UserID } from '@/types/store'
 import Link from 'next/link'
-import React, { memo, useCallback, useMemo } from 'react'
+import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import { serializeToString } from '../chat/chat-input'
 import { Avatar, AvatarFallback } from '../ui/avatar'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '../ui/context-menu'
-import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '../ui/sidebar'
+import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '../ui/sidebar'
 import { Skeleton } from '../ui/skeleton'
+import { usePathname, useRouter } from 'next/navigation'
+import { useIsMobile } from '@/hooks/useMobile'
+import SidebarLink from './sidebar-link'
 
 const NavChats = () => {
   const messages = useStore(store => store.messages);
@@ -32,6 +35,24 @@ const NavChats = () => {
 
   // const channelsArray = useMemo(() => Object.values(channels || {}), [channels]);
   const channel_list = useMemo(() => [...channels.values()].sort(sortChannelsByCreatedAt), [channels, messages]);
+
+
+
+  const path = usePathname();
+  const prevPathRef = useRef(path);
+  const sidebar = useSidebar();
+
+  useEffect(() => {
+    if (prevPathRef.current !== path) {
+      prevPathRef.current = path;
+      if (sidebar.isMobile && sidebar.open) {
+        console.log("UPDAET");
+
+        sidebar.setOpenMobile(false)
+      }
+    }
+  }, [path])
+
 
   return (
     <SidebarGroup style={{ '--custom-scrollbar-bg': 'hsl(var(--sidebar-background))' } as React.CSSProperties} className='overflow-y-auto sidebar-inset-scrollarea flex-1 flex flex-col'>
@@ -74,12 +95,10 @@ const NavDMChat = memo(({ channel }: { channel: Channel }) => {
   const latest_last_message = useStore(store => store.messages?.[channel.id]?.[Object.keys(store.messages[channel.id])[0]!]);
   const last_message = latest_last_message || channel.last_message;
 
-  const status = useStore(store => store.chat_status[channel.id]?.[user_id])
+  const status = useStore(store => store.chatStatus[channel.id]?.[user_id])
   const activeChannel = useStore(store => store.activeChannel)
 
   const draft = serializeToString(useChatStore(state => state.getInputContent(channel.id)));
-
-
   const presence = useStore(store => store.presence.get(user_id))
 
   return <ContextMenu modal={false}>
@@ -89,7 +108,7 @@ const NavDMChat = memo(({ channel }: { channel: Channel }) => {
         asChild
         className='p-1 box-content h-8'
       >
-        <Link href={`/app/chats/${channel.id}`} className='data-[state="open"]:bg-sidebar-accent'>
+        <SidebarLink href={`/app/chats/${channel.id}`} className='data-[state="open"]:bg-sidebar-accent'>
           <Avatar className="h-8 w-8 rounded-sm relative overflow-visible">
             {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
             <AvatarFallback className="rounded-sm text-sm font-semibold text-muted-foreground">{createFallbackAvatar(user.display_name)}</AvatarFallback>
@@ -123,7 +142,7 @@ const NavDMChat = memo(({ channel }: { channel: Channel }) => {
                 </span>
             }
           </div>
-        </Link>
+        </SidebarLink>
       </SidebarMenuButton>
     </ContextMenuTrigger>
     <ContextMenuContent className="w-44">
@@ -141,13 +160,9 @@ const NavGroupChat = memo(({ channel }: { channel: Channel }) => {
   const latest_last_message = useStore(store => store.messages?.[channel.id]?.[Object.keys(store.messages[channel.id])[0]!]);
 
   const activeChannel = useStore(store => store.activeChannel)
-
   const draft = serializeToString(useChatStore(state => state.getInputContent(channel.id)));
-
   const last_message = latest_last_message || channel.last_message;
-
   const last_message_author = useStore(store => store.users.get(last_message?.author_id))
-
 
   return <ContextMenu modal={false}>
     <ContextMenuTrigger asChild>
@@ -156,7 +171,7 @@ const NavGroupChat = memo(({ channel }: { channel: Channel }) => {
         asChild
         className='p-1 box-content h-8'
       >
-        <Link href={`/app/chats/${channel.id}`} className='data-[state="open"]:bg-sidebar-accent'>
+        <SidebarLink href={`/app/chats/${channel.id}`} className='data-[state="open"]:bg-sidebar-accent'>
           <Avatar className="h-8 w-8 rounded-sm relative overflow-visible">
             {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
             <AvatarFallback className="rounded-sm text-sm font-semibold text-muted-foreground">{createFallbackAvatar(channel.name)}</AvatarFallback>
@@ -187,7 +202,7 @@ const NavGroupChat = memo(({ channel }: { channel: Channel }) => {
               }
             </span>
           </div>
-        </Link>
+        </SidebarLink>
       </SidebarMenuButton>
     </ContextMenuTrigger>
     <ContextMenuContent className="w-44">

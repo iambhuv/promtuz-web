@@ -24,7 +24,7 @@ import { ImperativePanelHandle } from "react-resizable-panels"
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
+const SIDEBAR_WIDTH_MOBILE = "100vw";
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -53,6 +53,7 @@ const SidebarProvider = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     defaultOpen?: boolean
+    defaultMobile?: boolean
     open?: boolean
     onOpenChange?: (open: boolean) => void
   }
@@ -60,6 +61,7 @@ const SidebarProvider = React.forwardRef<
   (
     {
       defaultOpen = true,
+      defaultMobile = false,
       open: openProp,
       onOpenChange: setOpenProp,
       className,
@@ -70,7 +72,7 @@ const SidebarProvider = React.forwardRef<
     ref
   ) => {
     const isMobile = useIsMobile()
-    const [openMobile, setOpenMobile] = React.useState(false)
+    const [openMobile, setOpenMobile] = React.useState(defaultMobile)
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.

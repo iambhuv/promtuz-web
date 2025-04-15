@@ -43,7 +43,7 @@ const RegisterPage = () => {
       //   }
       // });
 
-      const { data, err } = await handleRequest<{ id: string }>("POST", `/register`, jsonBytes({
+      const { data, err } = await handleRequest<{ id: string }>("POST", `/auth/register`, jsonBytes({
         username, password, display_name
       }));
 

@@ -30,11 +30,29 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useStore } from "@/store"
-import { createFallbackAvatar } from "@/lib/utils"
+import { createFallbackAvatar, jsonBytes } from "@/lib/utils"
+import { handleRequest } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const user = useStore(store => store.me)
+  const user = useStore(store => store.me);
+  const session = useStore(store => store.session);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    // TODO: add action dialog here
+
+    const res = await handleRequest<{ ok: boolean }>("POST", `/auth/logout`, jsonBytes({
+      session, user: user.id
+    }));
+
+
+    if (!res.err && res.data!.ok) {
+      router.replace(`/login`)
+      router.refresh();
+    }
+  }
 
   return (
     <SidebarMenu>
@@ -82,9 +100,9 @@ export function NavUser() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
-              TODO: Log out
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

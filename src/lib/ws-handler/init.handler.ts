@@ -9,7 +9,7 @@ export const initHandlers: HandlerGroup = {
       presence: new Map(Object.entries(data.presence)),
       channels: new Map(Object.entries(data.channels)),
       session: data.session,
-      push_token: data.push_token,
+      pushToken: data.push_token,
       loaded: true
     })
   },

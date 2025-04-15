@@ -1,4 +1,4 @@
-import { type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
@@ -12,6 +12,8 @@ export function middleware(request: NextRequest) {
 
   //   return login_response
   // }
+
+
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register');
   const isHome = pathname === '/';
 
@@ -24,6 +26,9 @@ export function middleware(request: NextRequest) {
     return Response.redirect(new URL('/app', request.url));
   }
 
+  return NextResponse.next({
+    headers: new Headers({ "x-pathname": pathname })
+  })
 }
 
 export const config = {

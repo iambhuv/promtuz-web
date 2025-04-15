@@ -79,11 +79,11 @@ export type StoreState = {
   messages: Record<ChannelID, Record<MessageID, Message>>;
 
   session: string;
-  push_token?: string;
+  pushToken?: string;
 
   connectionStatus: ConnectionStatus;
 
-  chat_status: Record<ChannelID, Record<UserID, ChatStatus['status']>>
+  chatStatus: Record<ChannelID, Record<UserID, ChatStatus['status']>>
 
   activeChannel: ChannelID,
 }

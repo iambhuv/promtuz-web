@@ -24,7 +24,7 @@ const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app)
 
 const Notifications = () => {
-  const push_token = useStore((store) => store.push_token);
+  const push_token = useStore((store) => store.pushToken);
   const ws_emit = useStore((store) => store.emit);
 
   const sw = useRef<ServiceWorkerRegistration>(null)

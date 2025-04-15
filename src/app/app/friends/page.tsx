@@ -1,12 +1,14 @@
 "use client";
 
+import SwipeToBack from "@/components/swipe-to-back";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
-  SidebarTrigger
+  SidebarTrigger,
+  useSidebar
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +17,7 @@ import { handleRequest } from "@/lib/api";
 import { cn, createFallbackAvatar } from "@/lib/utils";
 import { useStore } from "@/store";
 import type { RelationID, Relationship } from "@/types/store";
-import { Check, LucideEllipsisVertical, UserRoundSearch, X } from "lucide-react";
+import { ArrowLeft, Check, LucideEllipsisVertical, UserRoundSearch, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -24,6 +26,7 @@ export default function Friends() {
   const presence = useStore(store => store.presence);
   const { toast } = useToast()
   const [friendUser, setFriendUser] = useState("");
+  const sidebar = useSidebar();
 
   const { friends, pending, online } = useMemo(() => {
     const pending: { sent: typeof relations, received: typeof relations } = { sent: new Map(), received: new Map };
@@ -69,12 +72,18 @@ export default function Friends() {
 
   return (
     <>
-      <header className="flex h-16 shrink-0 gap-2">
-        <div className="flex items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <h1 className="font-medium text-muted-foreground">Friends</h1>
-        </div>
+      <header className="flex h-16 shrink-0 gap-2 items-center">
+        <SwipeToBack className={"flex items-center gap-2 px-4"}>
+          {/* <div className=""> */}
+          {/* {sidebar.isMobile && <>
+            <Button variant={'secondary'} size={'icon'} onClick={() => sidebar.setOpenMobile(true)}>
+              <ArrowLeft />
+            </Button>
+            <Separator orientation="vertical" className="mr-2 h-4" />
+          </>} */}
+          <h1 className="font-bold text-foreground text-xl">Friends</h1>
+          {/* </div> */}
+        </SwipeToBack>
       </header>
       <div className="flex flex-col gap-5 p-4 pt-0 overflow-y-auto h-[calc(100dvh-(5rem))] sidebar-inset-scrollarea">
         <div className="flex gap-2 items-center mt-3">

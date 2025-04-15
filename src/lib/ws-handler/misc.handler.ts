@@ -10,11 +10,11 @@ export const miscHandlers: HandlerGroup = {
     }))
   },
   CHAT_STATUS(get, set, status) {
-    set(({ chat_status }) => ({
-      chat_status: {
-        ...chat_status,
+    set(({ chatStatus }) => ({
+      chatStatus: {
+        ...chatStatus,
         [status.channel_id]: {
-          ...(chat_status[status.channel_id] || {}),
+          ...(chatStatus[status.channel_id] || {}),
           [status.user_id]: status.status
         }
       }

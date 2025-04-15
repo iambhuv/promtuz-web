@@ -25,6 +25,7 @@ import NavChats from "./nav-chats";
 import { Button } from "../ui/button";
 import { ResizablePanel } from "../ui/resizable";
 import { PromtuzLogo } from "../logo";
+import SidebarLink from "./sidebar-link";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof ResizablePanel> & React.ComponentProps<typeof Sidebar>) {
   return (
@@ -58,11 +59,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof ResizablePa
                 asChild
                 className="justify-between rounded-md [&_svg]:size-3.5"
               >
-                <Link href={'/app/friends'}>
+                <SidebarLink href={'/app/friends'}>
                   <Users />
 
                   <span className="text-xs font-medium mr-auto">FRIENDS</span>
-                </Link>
+                </SidebarLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

@@ -46,13 +46,11 @@ export const createStore = (initProps: Partial<DataStore>) => {
     relationships: new Map(),
     me: undefined as unknown as User,
     channels: new Map(),
-
     presence: new Map(),
-
     activeChannel: "",
     session: "",
 
-    chat_status: {},
+    chatStatus: {},
     ...initProps,
 
     async loadUser(id: string) {
