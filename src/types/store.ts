@@ -11,9 +11,23 @@ export type Message = {
   updated_at: string;
   created_at: string;
 
+  previous_id: string;
+  next_id: string;
+
   reply_to: Omit<Message, "reply_to">
   attachments: Attachment[]
 }
+
+
+
+
+export type StoreMessage = Omit<Message, 'reply_to'> & {
+  previous_message?: string;
+  next_message?: string;
+  previously_rendered_time: Date;
+  reply_to: Omit<StoreMessage, "reply_to">;
+}
+
 
 export type Channel = {
   id: string
@@ -77,6 +91,7 @@ export type StoreState = {
   users: Map<UserID, User>;
   presence: Map<UserID, Presence>
   messages: Record<ChannelID, Record<MessageID, Message>>;
+  messages_version: number;
 
   session: string;
   pushToken?: string;

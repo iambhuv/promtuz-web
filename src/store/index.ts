@@ -2,46 +2,34 @@ import { handleRequest } from '@/lib/api';
 import { toQueryString } from '@/lib/utils';
 import pako from "pako";
 import { createContext, useContext } from 'react';
-import { useStore as _useStore, create, StoreApi } from 'zustand';
-import { Channel, ChatStatus, DataStore, Message, MeUser, Presence, RelationID, Relationship, User, UserID } from '../types/store';
-
+import { useStore as _useStore, create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { enableMapSet } from 'immer';
+import { DataStore, Message, StoreMessage, User } from '../types/store';
+
 import { eventHandlers } from '@/lib/ws-handler';
 import { WebSocketEventMap } from '@/types/events';
 import { loadSounds } from '@/lib/load-sounds';
+import { enableMapSet } from 'immer';
 
-enableMapSet();
+enableMapSet()
 
 export type Store = ReturnType<typeof createStore>;
 
 function deflatePayload(data: Uint8Array) {
-  return pako.inflate(data, { to: "string" })
-}
-
-
-function setupChannelList(channels: Record<string, Channel>, store: StoreApi<DataStore>) {
-  for (const channel in channels) {
-    Object.assign(channels[channel], {
-      get last_message() {
-        const state = store.getState().messages;
-        let last_message = state[channels[channel].id]?.[Object.keys(state[channels[channel].id] || {})[0]]
-        return last_message || channels[channel].last_message
-      }
-    })
-  }
-
-  return channels
+  return pako.inflateRaw(data, { to: "string" })
 }
 
 
 let HEARTBEAT: number;
+
+export const messages = new Map<string, StoreMessage>();
 
 export const createStore = (initProps: Partial<DataStore>) => {
   const store = create<DataStore>()(immer((set, get, store) => ({
     loaded: false,
     users: new Map(),
     messages: {},
+    messages_version: 0,
     ws: undefined,
     connectionStatus: 'CONNECTING',
     relationships: new Map(),
@@ -80,6 +68,8 @@ export const createStore = (initProps: Partial<DataStore>) => {
       ws.onopen = (wse) => {
         console.info(`[RealTime] Established connection in ${tries} try.`);
 
+        console.time("Init Time");
+
         set({ connectionStatus: "ACTIVE" });
 
         HEARTBEAT = setInterval(() => {
@@ -96,14 +86,18 @@ export const createStore = (initProps: Partial<DataStore>) => {
 
         const { type, data } = parsed;
 
-        console.info(`[${type}]:`, data);
+        if (type == "INIT") {
+          console.timeEnd("Init Time");
+        }
+
+        console.info(`%c[${type}]:`, "color:skyblue;font-size:0.8rem", data);
 
         const handler = eventHandlers[type];
 
         if (handler) {
           handler(get, set, <any>data);
         } else {
-          console.error(`Cannot Find Event Handler for Event: [${type}]`);
+          console.error(`Cannot Find Event Handler for Event: [${type}]`, parsed);
         }
       }
 
@@ -133,7 +127,8 @@ export const createStore = (initProps: Partial<DataStore>) => {
       const { ws } = get();
       if (!ws) return;
 
-      return ws.send(pako.deflate(JSON.stringify({ type: event, data }), { level: 9, memLevel: 4 }))
+
+      return ws.send(pako.deflateRaw(JSON.stringify({ type: event, data })))
     },
 
     async loadMessages(channel_id, before, limit, beforeStateSet) {
@@ -142,6 +137,8 @@ export const createStore = (initProps: Partial<DataStore>) => {
       }))
 
       if (data) {
+        console.info(`%c(MESSAGE_LOAD - [${channel_id}])`, "color:skyblue;font-size:0.8rem", data.messages);
+
         beforeStateSet?.();
         set({
           messages: {

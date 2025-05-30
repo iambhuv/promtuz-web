@@ -9,7 +9,6 @@ import { ChatHeader } from '@/components/chat/chat-header';
 import { ChatPanel } from '@/components/chat/chat-panel';
 import { MessageInput } from '@/components/message/message-input';
 import { MessageList } from '@/components/message/message-list';
-import { MessageStatus } from '@/components/message/message-status';
 import { motion } from 'framer-motion';
 
 const ChatPage = ({ params }: { params: Promise<{ channel_id: string }>, searchParams: Promise<any> }) => {

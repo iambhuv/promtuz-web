@@ -74,12 +74,12 @@ const useMessageHandlers = (channelId: string) => {
 
         jsonPayload['attachments'].push(attachment);
 
-        const compressedFileBytes = Pako.deflate(await file.arrayBuffer());
+        const compressedFileBytes = Pako.deflateRaw(await file.arrayBuffer());
 
         fdPayload.append(`files`, new Blob([compressedFileBytes], { type: file.type, endings: "native" }), file.name);
       }
 
-      fdPayload.set('json_payload', new Blob([Pako.deflate(Buffer.from(JSON.stringify(jsonPayload)))]));
+      fdPayload.set('json_payload', new Blob([Pako.deflateRaw(Buffer.from(JSON.stringify(jsonPayload)))]));
       
       const response = await handleRequest("POST", `/chats/${channelId}/messages`, fdPayload, {
         // 'content-type': `multipart/form-data; boundary=${fdPayload.}`

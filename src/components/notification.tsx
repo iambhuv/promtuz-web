@@ -6,16 +6,7 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { useEffect, useState } from 'react';
 // TODO: Add SDKs for Firebase products that you want to use
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAr-hubneOMLZC79zKTPlhsYejvIMCxhAQ",
-  authDomain: "promtuz-7c9a4.firebaseapp.com",
-  projectId: "promtuz-7c9a4",
-  storageBucket: "promtuz-7c9a4.firebasestorage.app",
-  messagingSenderId: "971979484967",
-  appId: "1:971979484967:web:b6ac7f97a1ff2325f20302",
-  measurementId: "G-73ER74VEMN"
-};
-
+const firebaseConfig = JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG!);
 
 const app = initializeApp(firebaseConfig);
 

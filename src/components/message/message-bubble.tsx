@@ -95,6 +95,7 @@ const MessageContent = ({ message, sent, className, shouldShowAuthor, shouldShow
         {reply && <MessageContentReply message={message} sent={sent} />}
 
         <div className="flex flex-col">
+          {/* TODO: Border Around Images */}
           {message.attachments.map(attachment => {
             const file_extension = attachment.file_name ? attachment.file_name.split(".").at(-1) : "";
 
